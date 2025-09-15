@@ -123,7 +123,7 @@ This project is licensed under the [MIT License](LICENSE).
 
 - Website: [OrbisGPT.com](https://orbisgpt.com) - [XylarLabs.com](https://xylarlabs.com) - [WBBT.net](https://wbbt.net)
 - Email: support@xylarlabs.com
-- Twitter: [@XylarAI](https://twitter.com/XylarAI)
+- Instagram: [@burakcanogut](https://instagram.com/burakcanogut)
 
 ## 🙏 Acknowledgments
 
