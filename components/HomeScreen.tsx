@@ -1,0 +1,160 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+*/
+import React, { useState, useEffect, useCallback } from 'react';
+import { dataURLtoFile } from '../lib/utils';
+import { RecentProject } from '../types';
+import { SparklesIcon, UploadIcon } from './icons';
+import { cn } from '../lib/utils';
+
+interface HomeScreenProps {
+  onFileSelect: (file: File) => void;
+  onGoToDesignStudio: () => void;
+}
+
+const ProjectCard: React.FC<{ project: RecentProject, onClick: () => void }> = ({ project, onClick }) => (
+    <div className="group relative rounded-xl overflow-hidden cursor-pointer aspect-[4/3]" onClick={onClick}>
+        <img src={project.thumbnailUrl} alt={project.name} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-4">
+            <h3 className="text-white font-semibold text-sm truncate">{project.name}</h3>
+        </div>
+    </div>
+);
+
+
+const HomeScreen: React.FC<HomeScreenProps> = ({ onFileSelect, onGoToDesignStudio }) => {
+  const [recentProjects, setRecentProjects] = useState<RecentProject[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
+
+  useEffect(() => {
+    try {
+        const storedProjects = localStorage.getItem('orbisGenRecentProjects');
+        if (storedProjects) {
+            setRecentProjects(JSON.parse(storedProjects));
+        }
+    } catch (error) {
+        console.error("Failed to parse recent projects from localStorage:", error);
+        localStorage.removeItem('orbisGenRecentProjects');
+    }
+  }, []);
+  
+  const handleFile = (file: File | null | undefined) => {
+    if (file && file.type.startsWith('image/')) {
+        onFileSelect(file);
+    } else if (file) {
+        alert('Please select a valid image file.');
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    handleFile(e.target.files?.[0]);
+  };
+
+  const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragging(false);
+      handleFile(e.dataTransfer.files?.[0]);
+  }, [onFileSelect]);
+  
+  const handleDragEvents = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === 'dragenter' || e.type === 'dragover') {
+        setIsDragging(true);
+    } else if (e.type === 'dragleave') {
+        setIsDragging(false);
+    }
+  }, []);
+  
+  const handleProjectClick = (project: RecentProject) => {
+      try {
+        const file = dataURLtoFile(project.imageUrl, project.name);
+        onFileSelect(file);
+      } catch (error) {
+          console.error("Failed to load project:", error);
+          alert("Sorry, there was an issue loading this project. It might be corrupted.");
+      }
+  };
+
+  const openFilePicker = () => {
+    document.getElementById('file-upload-homescreen')?.click();
+  };
+
+
+  return (
+    <div className="w-full h-screen bg-zinc-950 flex flex-col items-center justify-center p-4 sm:p-8 animate-fade-in overflow-y-auto">
+        <input id="file-upload-homescreen" type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+
+        <main className="w-full max-w-4xl mx-auto flex flex-col items-center flex-grow justify-center">
+            {/* Header */}
+            <div className="text-center mb-10">
+                <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-white">
+                    OrbisGen
+                </h1>
+                <p className="mt-4 text-lg text-zinc-400">
+                    The next-generation creative suite, powered by AI.
+                </p>
+            </div>
+            
+            {/* Main Action Zone */}
+            <div
+                onClick={openFilePicker}
+                onDrop={handleDrop}
+                onDragEnter={handleDragEvents}
+                onDragLeave={handleDragEvents}
+                onDragOver={handleDragEvents}
+                className={cn(
+                    "w-full max-w-xl cursor-pointer rounded-xl border-2 border-dashed border-zinc-800 bg-zinc-900 p-10 text-center transition-all duration-200",
+                    isDragging ? "border-blue-500 bg-blue-900/20 scale-105" : "hover:border-zinc-600 hover:bg-zinc-800/50"
+                )}
+            >
+                <div className="flex flex-col items-center text-zinc-500 pointer-events-none">
+                    <UploadIcon className="w-12 h-12 mb-4 text-zinc-600" />
+                    <span className="font-semibold text-zinc-300">Drag & drop an image</span>
+                    <p className="text-sm">or click to browse your files</p>
+                </div>
+            </div>
+            
+            {/* Separator / Secondary Action */}
+            <div className="my-8 flex items-center w-full max-w-xl">
+                <div className="flex-grow border-t border-zinc-800"></div>
+                <span className="flex-shrink mx-4 text-xs text-zinc-600 uppercase font-medium">Or</span>
+                <div className="flex-grow border-t border-zinc-800"></div>
+            </div>
+            
+            <button
+                onClick={onGoToDesignStudio}
+                className="flex items-center gap-2 bg-blue-600 text-white font-semibold py-3 px-6 rounded-xl transition-all hover:bg-blue-500 active:bg-blue-700 hover:scale-105 active:scale-100 shadow-md shadow-blue-600/30 hover:shadow-xl hover:shadow-blue-500/50"
+            >
+                <SparklesIcon className="w-5 h-5" />
+                Create an Image with AI
+            </button>
+        </main>
+
+        {/* Recent Projects */}
+        {recentProjects.length > 0 && (
+            <section className="w-full max-w-5xl mx-auto mt-16 mb-8 flex-shrink-0 animate-fade-in">
+                <h2 className="text-xl font-semibold text-white mb-6 text-center">Recent Projects</h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+                    {recentProjects.map((proj) => (
+                        <ProjectCard 
+                            key={proj.id} 
+                            project={proj} 
+                            onClick={() => handleProjectClick(proj)} 
+                        />
+                    ))}
+                </div>
+            </section>
+        )}
+
+        {/* Footer */}
+        <footer className="w-full text-center text-xs text-zinc-600 py-4 flex-shrink-0">
+            <p>&copy; {new Date().getFullYear()} OrbisGen</p>
+        </footer>
+    </div>
+  );
+};
+
+export default HomeScreen;

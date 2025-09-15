@@ -1,0 +1,48 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+*/
+
+/* Custom Animations used across the app */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in, .animate-fade-in-fast, .animate-fade-in-slow {
+  animation-name: fadeIn;
+  animation-fill-mode: forwards;
+  animation-timing-function: ease-in-out;
+}
+
+.animate-fade-in {
+  animation-duration: 0.5s;
+}
+
+.animate-fade-in-slow {
+  animation-duration: 1.5s;
+}
+
+.animate-fade-in-fast {
+  animation-duration: 0.2s;
+}
+
+/* Custom loader style used in App.tsx */
+.loader {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: 5px solid rgba(255, 255, 255, 0.2);
+  border-top-color: #fff;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

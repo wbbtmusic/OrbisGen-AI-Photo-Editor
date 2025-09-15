@@ -1,0 +1,6 @@
+{
+  "name": "OrbisGen",
+  "description": "A generative photo editor for the modern web. Retouch, apply creative filters, and make professional adjustments to your images using simple text prompts.",
+  "requestFramePermissions": [],
+  "prompt": ""
+}
