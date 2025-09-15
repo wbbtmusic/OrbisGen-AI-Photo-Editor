@@ -2,7 +2,7 @@
  * @license
  * SPDX-License-Identifier: Apache-2.0
 */
-import React from 'react';
+import React, { useRef } from 'react';
 import { Layer } from '../types';
 import { UploadIcon } from './icons';
 
@@ -23,10 +23,17 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
   onFlatten,
   isLoading,
 }) => {
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      onAddLayer(e.target.files[0]);
+    const file = e.target.files?.[0];
+    if (inputRef.current) {
+        inputRef.current.blur();
+    }
+    if (file) {
+      requestAnimationFrame(() => {
+        onAddLayer(file);
+      });
       // Reset input value to allow uploading the same file again
       e.target.value = '';
     }
@@ -78,7 +85,7 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
       </div>
       
       <div className="flex-shrink-0 flex flex-col gap-2 pt-2 border-t border-zinc-800">
-        <input type="file" id="layer-upload" className="hidden" accept="image/*" onChange={handleFileChange} />
+        <input ref={inputRef} type="file" id="layer-upload" className="hidden" accept="image/*" onChange={handleFileChange} />
         <label htmlFor="layer-upload" className="w-full text-center text-sm font-semibold py-2 px-4 rounded-xl transition-colors bg-zinc-700 text-zinc-200 hover:bg-zinc-600 cursor-pointer flex items-center justify-center gap-2">
             <UploadIcon className="w-5 h-5"/>
             Add Image Layer

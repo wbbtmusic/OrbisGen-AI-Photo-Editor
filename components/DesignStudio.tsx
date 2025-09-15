@@ -316,12 +316,15 @@ const DesignStudio: React.FC<DesignStudioProps> = ({ onExit, onUseInEditor }) =>
                                     </div>
                                 </div>
                                 <div className="flex flex-col gap-2">
-                                    <label className="text-sm font-medium text-zinc-300">2. Add Person</label>
-                                    <AddPersonControls onOptionsChange={(person) => setPersonaOptions(p => ({ ...p, person: {...p.person, ...person} }))} disabled={isLoading || generationStep !== 'setup'} />
-                                </div>
-                                 <div className="flex flex-col gap-2">
-                                    <label htmlFor="pose-prompt" className="text-sm font-medium text-zinc-300">3. Pose & Action Prompt</label>
-                                    <textarea id="pose-prompt" value={personaOptions.posePrompt} onChange={(e) => setPersonaOptions(p => ({ ...p, posePrompt: e.target.value }))} placeholder="e.g., 'walking towards the camera', 'leaning against a wall'" className="h-24 bg-zinc-800 border border-zinc-700 rounded-lg p-2 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-yellow-400 transition-colors" disabled={isLoading || generationStep !== 'setup'} />
+                                    <label className="text-sm font-medium text-zinc-300">2. Add & Pose Person</label>
+                                     <AddPersonControls 
+                                        onOptionsChange={({ person, posePrompt }) => setPersonaOptions(p => ({ 
+                                            ...p, 
+                                            person: {...p.person, ...person},
+                                            posePrompt,
+                                        }))} 
+                                        disabled={isLoading || generationStep !== 'setup'} 
+                                    />
                                 </div>
                             </>
                         )}

@@ -28,7 +28,7 @@ const ZoomControls: React.FC<ZoomControlsProps> = ({ zoom, setZoom, onReset }) =
   }
 
   return (
-    <div className="absolute bottom-24 md:bottom-4 right-4 z-30 bg-black/50 backdrop-blur-sm p-2 rounded-lg flex items-center gap-2 w-64 shadow-lg animate-fade-in-fast">
+    <div className="bg-black/60 backdrop-blur-sm p-2 rounded-lg flex items-center gap-2 shadow-lg">
         <button 
             onClick={decrementZoom}
             className="flex-shrink-0 w-8 h-8 rounded-md bg-zinc-700 hover:bg-zinc-600 text-lg font-bold flex items-center justify-center transition-colors"
@@ -43,7 +43,7 @@ const ZoomControls: React.FC<ZoomControlsProps> = ({ zoom, setZoom, onReset }) =
           step="0.01"
           value={zoom}
           onChange={handleZoomChange}
-          className="w-full h-2 bg-zinc-700 rounded-lg appearance-none cursor-pointer range-lg accent-yellow-400"
+          className="w-24 h-2 bg-zinc-700 rounded-lg appearance-none cursor-pointer range-lg accent-yellow-400"
           aria-label="Zoom slider"
         />
         <button 

@@ -2,49 +2,65 @@
  * @license
  * SPDX-License-Identifier: Apache-2.0
 */
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { UploadIcon } from './icons';
 import { AddPersonOptions } from '../types';
+import { fileToDataURL } from '../lib/utils';
+
 
 interface AddPersonControlsProps {
-  onOptionsChange: (options: Partial<AddPersonOptions>) => void;
+  onOptionsChange: (options: { person: Partial<AddPersonOptions>, posePrompt: string }) => void;
   disabled: boolean;
 }
 
 const AddPersonControls: React.FC<AddPersonControlsProps> = ({ onOptionsChange, disabled }) => {
   const [personRefImage, setPersonRefImage] = useState<File | null>(null);
   const [prompt, setPrompt] = useState('');
-  const [placement, setPlacement] = useState<AddPersonOptions['placement']>('center');
-  const [familiarity, setFamiliarity] = useState<string>('Pose the person to be standing naturally and respectfully within the scene.');
-  const [gazeDirection, setGazeDirection] = useState<AddPersonOptions['gazeDirection']>('looking at camera');
-  const [faceDirection, setFaceDirection] = useState<AddPersonOptions['faceDirection']>('facing camera');
+  const [posePrompt, setPosePrompt] = useState('');
   const [preview, setPreview] = useState<string | null>(null);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
+  const [isProcessingPreview, setIsProcessingPreview] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     onOptionsChange({
-      prompt,
-      personRefImage,
-      placement,
-      familiarity,
-      gazeDirection,
-      faceDirection,
+      person: {
+        prompt,
+        personRefImage,
+      },
+      posePrompt,
     });
-  }, [prompt, personRefImage, placement, familiarity, gazeDirection, faceDirection, onOptionsChange]);
+  }, [prompt, personRefImage, posePrompt, onOptionsChange]);
 
   useEffect(() => {
     if (!personRefImage) {
       setPreview(null);
       return;
     }
-    const objectUrl = URL.createObjectURL(personRefImage);
-    setPreview(objectUrl);
-    return () => URL.revokeObjectURL(objectUrl);
+    setIsProcessingPreview(true);
+    let isCancelled = false;
+    fileToDataURL(personRefImage).then(dataUrl => {
+      if (!isCancelled) {
+        setPreview(dataUrl);
+        setIsProcessingPreview(false);
+      }
+    }).catch(() => {
+        if (!isCancelled) {
+          setIsProcessingPreview(false);
+        }
+    });
+    return () => { isCancelled = true; };
   }, [personRefImage]);
 
-  const handleFileChange = (files: FileList | null) => {
-    if (files && files.length > 0) {
-      setPersonRefImage(files[0]);
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (inputRef.current) {
+        inputRef.current.blur();
+    }
+    if (file) {
+      requestAnimationFrame(() => {
+        setPersonRefImage(file);
+      });
     }
   };
 
@@ -62,8 +78,22 @@ const AddPersonControls: React.FC<AddPersonControlsProps> = ({ onOptionsChange, 
     e.preventDefault();
     e.stopPropagation();
     setIsDraggingOver(false);
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      setPersonRefImage(e.dataTransfer.files[0]);
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      requestAnimationFrame(() => {
+        setPersonRefImage(file);
+      });
+    }
+  }, []);
+
+  const handleRemoveFile = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    requestAnimationFrame(() => {
+      setPersonRefImage(null);
+    });
+    if (inputRef.current) {
+      inputRef.current.value = '';
     }
   }, []);
 
@@ -82,11 +112,12 @@ const AddPersonControls: React.FC<AddPersonControlsProps> = ({ onOptionsChange, 
         <p className="text-xs text-center text-zinc-500 -my-1">OR (Optional)</p>
     
         <input
+            ref={inputRef}
             type="file"
             id="person-ref-upload-controls"
             className="hidden"
             accept="image/*"
-            onChange={(e) => handleFileChange(e.target.files)}
+            onChange={handleFileChange}
             disabled={disabled}
         />
         <label
@@ -101,28 +132,41 @@ const AddPersonControls: React.FC<AddPersonControlsProps> = ({ onOptionsChange, 
             ${preview ? 'border-solid p-1' : ''}
           `}
         >
-          {preview ? (
+          {preview && !isProcessingPreview && (
             <>
               <img src={preview} alt="Person reference preview" className="absolute inset-1 w-[calc(100%-0.5rem)] h-[calc(100%-0.5rem)] object-contain rounded" />
               <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setPersonRefImage(null);
-                }}
+                onClick={handleRemoveFile}
                 className="absolute top-1 right-1 z-10 p-1 bg-black/50 rounded-full text-white hover:bg-black/80 transition-colors"
                 aria-label="Remove image"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
             </>
-          ) : (
+          )}
+          {isProcessingPreview && (
+            <div className="flex flex-col items-center justify-center text-center text-zinc-400">
+                <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+            </div>
+          )}
+          {!personRefImage && !isProcessingPreview && (
             <div className="flex flex-col items-center justify-center text-center text-zinc-400">
               <UploadIcon className="w-6 h-6 mb-1" />
               <span className="text-xs font-semibold">Upload Reference Image</span>
             </div>
           )}
         </label>
+        <textarea
+            value={posePrompt}
+            onChange={(e) => setPosePrompt(e.target.value)}
+            placeholder="Describe pose & action (e.g. 'waving')"
+            className="flex-grow bg-zinc-800 border border-zinc-700 text-zinc-100 rounded-lg p-2 text-sm focus:ring-1 focus:ring-yellow-400 focus:outline-none transition w-full disabled:cursor-not-allowed disabled:opacity-60"
+            rows={2}
+            disabled={disabled}
+        />
       </div>
     </div>
   );

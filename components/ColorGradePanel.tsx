@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
 */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { UploadIcon } from './icons';
 
 interface ColorGradePanelProps {
@@ -13,22 +13,18 @@ interface ColorGradePanelProps {
 
 const ColorGradePanel: React.FC<ColorGradePanelProps> = ({ onApplyColorGrade, isLoading }) => {
   const [styleFile, setStyleFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (!styleFile) {
-      setPreview(null);
-      return;
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (inputRef.current) {
+        inputRef.current.blur();
     }
-    const objectUrl = URL.createObjectURL(styleFile);
-    setPreview(objectUrl);
-    return () => URL.revokeObjectURL(objectUrl);
-  }, [styleFile]);
-
-  const handleFileChange = (files: FileList | null) => {
-    if (files && files.length > 0) {
-      setStyleFile(files[0]);
+    if (file) {
+      requestAnimationFrame(() => {
+        setStyleFile(file);
+      });
     }
   };
 
@@ -52,8 +48,22 @@ const ColorGradePanel: React.FC<ColorGradePanelProps> = ({ onApplyColorGrade, is
     e.preventDefault();
     e.stopPropagation();
     setIsDraggingOver(false);
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      setStyleFile(e.dataTransfer.files[0]);
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      requestAnimationFrame(() => {
+        setStyleFile(file);
+      });
+    }
+  }, []);
+
+  const handleRemoveFile = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    requestAnimationFrame(() => {
+      setStyleFile(null);
+    });
+    if (inputRef.current) {
+      inputRef.current.value = '';
     }
   }, []);
 
@@ -63,11 +73,12 @@ const ColorGradePanel: React.FC<ColorGradePanelProps> = ({ onApplyColorGrade, is
       
       <div className="flex flex-col gap-4">
         <input
+            ref={inputRef}
             type="file"
             id="style-upload"
             className="hidden"
             accept="image/*"
-            onChange={(e) => handleFileChange(e.target.files)}
+            onChange={handleFileChange}
             disabled={isLoading}
         />
         <label
@@ -76,29 +87,25 @@ const ColorGradePanel: React.FC<ColorGradePanelProps> = ({ onApplyColorGrade, is
           onDragLeave={handleDragEvents}
           onDragOver={handleDragEvents}
           onDrop={handleDrop}
-          className={`relative flex flex-col items-center justify-center w-full h-32 rounded-lg border-2 border-dashed transition-colors duration-200 cursor-pointer bg-zinc-800
+          className={`relative w-full h-32 rounded-lg border-2 border-dashed transition-colors duration-200 cursor-pointer bg-zinc-800
             ${isDraggingOver ? 'border-blue-500 bg-zinc-700' : 'border-zinc-700 hover:border-zinc-600'}
             ${isLoading ? 'cursor-not-allowed opacity-60' : ''}
-            ${preview ? 'border-solid p-1' : ''}
+            ${styleFile ? 'border-solid' : ''}
           `}
         >
-          {preview ? (
-            <>
-              <img src={preview} alt="Style preview" className="absolute inset-1 w-[calc(100%-0.5rem)] h-[calc(100%-0.5rem)] object-contain rounded" />
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setStyleFile(null);
-                }}
-                className="absolute top-1 right-1 z-10 p-1 bg-black/50 rounded-full text-white hover:bg-black/80 transition-colors"
-                aria-label="Remove image"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-              </button>
-            </>
+          {styleFile ? (
+            <div className="flex flex-col items-center justify-center text-center text-zinc-400 w-full h-full p-2">
+                <p className="text-sm font-semibold text-zinc-200 truncate w-full px-2" title={styleFile.name}>{styleFile.name}</p>
+                <button
+                    onClick={handleRemoveFile}
+                    className="mt-2 text-xs text-red-400 hover:text-red-300"
+                    aria-label="Remove file"
+                >
+                    Remove
+                </button>
+            </div>
           ) : (
-            <div className="flex flex-col items-center justify-center text-center text-zinc-400">
+            <div className="flex flex-col items-center justify-center text-center text-zinc-400 w-full h-full">
               <UploadIcon className="w-8 h-8 mb-2" />
               <span className="text-xs font-semibold">Click to upload</span>
               <span className="text-xs">or drag & drop</span>

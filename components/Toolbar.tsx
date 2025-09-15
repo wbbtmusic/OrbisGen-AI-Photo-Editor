@@ -2,7 +2,7 @@
  * @license
  * SPDX-License-Identifier: Apache-2.0
 */
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Tool } from '../types';
 import { 
@@ -103,39 +103,65 @@ interface ToolbarProps {
 }
 
 const Toolbar: React.FC<ToolbarProps> = ({ activeTool, setActiveTool, disabled }) => {
-    const [hoveredCategoryIndex, setHoveredCategoryIndex] = useState<number | null>(null);
-    const hoverTimeoutRef = useRef<number | null>(null);
+    const [openCategoryIndex, setOpenCategoryIndex] = useState<number | null>(null);
+    const navRef = useRef<HTMLElement>(null);
+
+    const handleCategoryClick = (index: number) => {
+        // Always use click to toggle on any device
+        setOpenCategoryIndex(prevIndex => (prevIndex === index ? null : index));
+    };
 
     const handleMouseEnter = (index: number) => {
-        if (hoverTimeoutRef.current) {
-            clearTimeout(hoverTimeoutRef.current);
+        // Only trigger hover on larger screens
+        if (window.innerWidth >= 768) {
+            setOpenCategoryIndex(index);
         }
-        setHoveredCategoryIndex(index);
     };
 
     const handleMouseLeave = () => {
-        // A small delay before closing to allow moving the mouse from icon to panel
-        hoverTimeoutRef.current = window.setTimeout(() => {
-            setHoveredCategoryIndex(null);
-        }, 100);
+        if (window.innerWidth >= 768) {
+            setOpenCategoryIndex(null);
+        }
+    };
+    
+    const handleToolSelect = (tool: Tool) => {
+        setActiveTool(tool);
+        setOpenCategoryIndex(null); // Close panel after selecting a tool
     };
 
+    // Effect to handle clicks outside the toolbar to close the menu.
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (navRef.current && !navRef.current.contains(event.target as Node)) {
+                setOpenCategoryIndex(null);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
+
     return (
-        <nav className="relative w-16 h-full bg-zinc-900 border-r border-zinc-800 p-2 flex flex-col items-center gap-2 z-40">
+        <nav ref={navRef} className="relative w-16 h-full bg-zinc-900 border-r border-zinc-800 py-2 flex flex-col items-center justify-start gap-2 z-40">
             {toolCategories.map((category, index) => {
                 const isCategoryActive = category.tools.some(t => t.name === activeTool);
+                const shouldShowPanel = openCategoryIndex === index;
+
                 return (
-                    <div
-                        key={category.name}
+                    <div 
+                        key={category.name} 
                         className="relative"
                         onMouseEnter={() => handleMouseEnter(index)}
                         onMouseLeave={handleMouseLeave}
                     >
                         <button
+                            onClick={() => handleCategoryClick(index)}
                             disabled={disabled}
                             title={category.name}
-                            className={`w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-200 group relative ${
-                                isCategoryActive || hoveredCategoryIndex === index
+                            className={`w-11 h-11 flex items-center justify-center rounded-xl transition-all duration-200 group relative ${
+                                isCategoryActive || shouldShowPanel
                                 ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/50'
                                 : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'
                             }`}
@@ -145,15 +171,13 @@ const Toolbar: React.FC<ToolbarProps> = ({ activeTool, setActiveTool, disabled }
                         </button>
 
                         <AnimatePresence>
-                            {hoveredCategoryIndex === index && (
+                            {shouldShowPanel && (
                                 <motion.div
-                                    initial={{ opacity: 0, x: -10 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    exit={{ opacity: 0, x: -10 }}
-                                    transition={{ duration: 0.2, ease: 'easeInOut' }}
-                                    className="absolute left-full top-0 ml-2 w-60 bg-zinc-800/80 backdrop-blur-lg border border-zinc-700 rounded-xl shadow-2xl p-2"
-                                    onMouseEnter={() => handleMouseEnter(index)}
-                                    onMouseLeave={handleMouseLeave}
+                                    initial={{ opacity: 0, scale: 0.95, x: 10 }}
+                                    animate={{ opacity: 1, scale: 1, x: 0 }}
+                                    exit={{ opacity: 0, scale: 0.95, x: 10 }}
+                                    transition={{ duration: 0.15, ease: 'easeOut' }}
+                                    className="absolute left-full top-0 ml-2 w-60 z-50 bg-black/70 backdrop-blur-md border border-zinc-700/80 rounded-xl shadow-2xl p-1.5"
                                 >
                                     <h3 className="font-bold text-white text-md px-2 pb-2 mb-2 border-b border-zinc-700">
                                         {category.name}
@@ -162,7 +186,7 @@ const Toolbar: React.FC<ToolbarProps> = ({ activeTool, setActiveTool, disabled }
                                         {category.tools.map(tool => (
                                             <button
                                                 key={tool.name}
-                                                onClick={() => setActiveTool(tool.name)}
+                                                onClick={() => handleToolSelect(tool.name)}
                                                 disabled={disabled}
                                                 className={`w-full flex items-center gap-3 p-2 rounded-lg text-left text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                                                     activeTool === tool.name

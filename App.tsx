@@ -38,7 +38,9 @@ import HomeScreen from './components/HomeScreen';
 import PersonaResultsView from './components/PersonaResultsView';
 import ZoomControls from './components/ZoomControls';
 import DesignStudio from './components/DesignStudio';
+import DisclaimerModal from './components/DisclaimerModal';
 import { dataURLtoFile, fileToDataURL } from './lib/utils';
+import { AdjustSlidersIcon } from './components/icons';
 
 const loadingMessages = [
   'Painting pixels...',
@@ -58,10 +60,11 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [appState, setAppState] = useState<'home' | 'editor' | 'design-studio'>('home');
-  const [isOptionsPanelOpen, setIsOptionsPanelOpen] = useState(false);
+  const [isToolPanelVisible, setIsToolPanelVisible] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [layers, setLayers] = useState<Layer[]>([]);
   const [loadingMessage, setLoadingMessage] = useState(loadingMessages[0]);
+  const [showDisclaimer, setShowDisclaimer] = useState(false);
 
   const editorCanvasRef = useRef<EditorCanvasRef>(null);
   const [selection, setSelection] = useState<PixelCrop | null>(null);
@@ -89,6 +92,24 @@ const App: React.FC = () => {
   
   const currentImageUrl = history[historyIndex]?.imageUrl;
   
+  useEffect(() => {
+    try {
+      const hasAccepted = localStorage.getItem('orbisGenDisclaimerAccepted');
+      if (hasAccepted !== 'true') {
+        setShowDisclaimer(true);
+      }
+    } catch (error) {
+      console.error("Could not access localStorage:", error);
+      setShowDisclaimer(true); 
+    }
+  }, []);
+
+  useEffect(() => {
+    if (window.innerWidth < 768) {
+      setIsToolPanelVisible(false);
+    }
+  }, []);
+
   useEffect(() => {
     let intervalId: number | undefined;
     if (isLoading) {
@@ -126,13 +147,6 @@ const App: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [historyIndex, history.length]);
 
-  useEffect(() => {
-    // When switching to a tool that doesn't have a panel, close it on mobile.
-    if (activeTool === 'none' || activeTool === 'layers') {
-        setIsOptionsPanelOpen(false);
-    }
-  }, [activeTool]);
-
   const updateHistory = (newImageUrl: string) => {
     const newHistory = history.slice(0, historyIndex + 1);
     setHistory([...newHistory, { imageUrl: newImageUrl }]);
@@ -147,7 +161,7 @@ const App: React.FC = () => {
         setHistoryIndex(0);
         setLayers([]);
         setActiveTool('adjust'); 
-        setIsOptionsPanelOpen(window.innerWidth >= 768); // Open panel on desktop
+        setIsToolPanelVisible(true);
         setAppState('editor');
         saveRecentProject(file);
         setPersonaState({ status: 'theme-selection', selectedTheme: null, generationCategories: [] });
@@ -171,7 +185,7 @@ const App: React.FC = () => {
       setGeneratedImages({});
       setCameraAnglesState({ status: 'selection', generationPrompts: [] });
       setGeneratedAngleImages({});
-      setIsOptionsPanelOpen(false);
+      setIsToolPanelVisible(false);
   };
 
   const handleGoToDesignStudio = () => {
@@ -215,17 +229,9 @@ const App: React.FC = () => {
   };
 
   const handleToolSelect = (tool: Tool) => {
-    if (activeTool === tool && window.innerWidth < 768) {
-        setIsOptionsPanelOpen(prev => !prev);
-    } else {
-        setActiveTool(tool);
-        if (tool !== 'none') {
-            setIsOptionsPanelOpen(true);
-        } else {
-            setIsOptionsPanelOpen(false);
-        }
-    }
+    setActiveTool(tool);
     setSearchTerm(''); // Clear search on any tool selection.
+    setIsToolPanelVisible(true);
   };
 
   const runGenerativeTask = useCallback(async (
@@ -233,6 +239,7 @@ const App: React.FC = () => {
     ...args: any[]
   ) => {
     if (!currentImageUrl) return;
+    setIsToolPanelVisible(false);
     setIsLoading(true);
     setError(null);
 
@@ -277,9 +284,9 @@ const App: React.FC = () => {
 
   const handleGeneratePersonas = useCallback(async (theme: Theme, categories: string[]) => {
     if (!originalImageFile) return;
-
+    
+    setIsToolPanelVisible(false);
     setIsLoading(true);
-    setIsOptionsPanelOpen(false);
     setPersonaState({ status: 'generating', selectedTheme: theme, generationCategories: categories });
     setGeneratedImages(
       categories.reduce((acc, category) => ({ ...acc, [category]: { status: 'pending' } }), {})
@@ -309,9 +316,9 @@ const App: React.FC = () => {
 
   const handleGenerateCameraAngles = useCallback(async (prompts: { name: string, prompt: string }[]) => {
     if (!originalImageFile) return;
-
+    
+    setIsToolPanelVisible(false);
     setIsLoading(true);
-    setIsOptionsPanelOpen(false);
     setCameraAnglesState({ status: 'generating', generationPrompts: prompts });
     setGeneratedAngleImages(
       prompts.reduce((acc, p) => ({ ...acc, [p.name]: { status: 'pending' } }), {})
@@ -354,11 +361,12 @@ const App: React.FC = () => {
       setGeneratedAngleImages({});
       
       setActiveTool('adjust');
-      setIsOptionsPanelOpen(true);
+      setIsToolPanelVisible(true);
   };
 
   const handleApplyCrop = () => {
     if (!editorCanvasRef.current || !selection || selection.width === 0) return;
+    setIsToolPanelVisible(false);
     const croppedDataUrl = editorCanvasRef.current.getCroppedDataURL('image/png');
     if (croppedDataUrl) {
         updateHistory(croppedDataUrl);
@@ -407,6 +415,7 @@ const App: React.FC = () => {
 
     const handleFlattenLayers = async () => {
         if (!currentImageUrl) return;
+        setIsToolPanelVisible(false);
         setIsLoading(true);
 
         const canvas = document.createElement('canvas');
@@ -472,9 +481,25 @@ const App: React.FC = () => {
     editorCanvasRef.current?.clearSelection();
   };
 
+  const handleAcceptDisclaimer = () => {
+    try {
+      localStorage.setItem('orbisGenDisclaimerAccepted', 'true');
+      setShowDisclaimer(false);
+    } catch (error) {
+      console.error("Could not write to localStorage:", error);
+      setShowDisclaimer(false);
+    }
+  };
 
   if (appState === 'home') {
-    return <HomeScreen onFileSelect={handleFileSelect} onGoToDesignStudio={handleGoToDesignStudio} />;
+    return (
+      <>
+        <AnimatePresence>
+          {showDisclaimer && <DisclaimerModal onAccept={handleAcceptDisclaimer} />}
+        </AnimatePresence>
+        <HomeScreen onFileSelect={handleFileSelect} onGoToDesignStudio={handleGoToDesignStudio} />
+      </>
+    );
   }
   
   if (appState === 'design-studio') {
@@ -488,13 +513,42 @@ const App: React.FC = () => {
     (cameraAnglesState.status === 'generating' || cameraAnglesState.status === 'results-shown');
 
   const isGenerationViewVisible = isPersonaResultsVisible || isCameraAnglesResultsVisible;
-
-
+  
   const canUndo = historyIndex > 0;
   const canRedo = historyIndex < history.length - 1;
 
+  const toolPanelProps = {
+    activeTool, isLoading, hasSelection: !!selection && selection.width > 0,
+    onApplyGenerativeEdit: (prompt: string) => handleApplyGenerativeAction(generateEditedImage, prompt),
+    onApplyCrop: handleApplyCrop, onSetAspect: setAspect, isCropping: !!selection && selection.width > 0,
+    onApplyAdjustment: (prompt: string) => runGenerativeTask(generateAdjustedImage, prompt),
+    onApplyFilter: (prompt: string) => runGenerativeTask(generateFilteredImage, prompt),
+    onApplyReplaceBackground: (prompt: string, harmonize: boolean) => runGenerativeTask(generateReplacedBackgroundImage, prompt, harmonize),
+    onApplyStudioEffect: (prompt: string) => runGenerativeTask(generateStudioEffect, prompt),
+    onApplyText: (text: string, style: string) => runGenerativeTask(generateInscribedText, text, style, selection),
+    onApplySky: (prompt: string) => runGenerativeTask(generateReplacedSky, prompt),
+    onApplyInsert: (prompt: string) => handleApplyGenerativeAction(generateInsertedObject, prompt),
+    onApplyColorGrade: (styleImage: File) => runGenerativeTask(generateColorGradedImage, styleImage),
+    onApplyFaceFusion: (faceRefImage: File) => runGenerativeTask(generateFusedFaceImage, faceRefImage),
+    onApplyClothingTransfer: (styleRefImage: File) => runGenerativeTask(generateStyleTransferredImage, styleRefImage),
+    onApplyFaceSwap: (faceRefImage: File) => runGenerativeTask(generateSwappedFaceImage, faceRefImage),
+    onApplyAddPerson: (options: AddPersonOptions) => runGenerativeTask(generateCompositedPersonImage, options),
+    onApplyMakeupTransfer: (makeupRefImage: File) => runGenerativeTask(generateMakeupTransferredImage, makeupRefImage),
+    onApplyFashion: (prompt: string) => runGenerativeTask(generateFashionImage, prompt),
+    onApplyMakeup: (prompt: string) => runGenerativeTask(generateMakeup, prompt),
+    onApplyRandomize: () => runGenerativeTask(expandImage, 'Be creative and completely transform this into a new, surprising image. Change the scene, style, and subject in an unexpected way.'),
+    originalImageFile: originalImageFile, onGeneratePersonas: handleGeneratePersonas, onUsePersonaInEditor: handleUseGeneratedImageInEditor,
+    personaState: personaState, setPersonaState: setPersonaState, generatedImages: generatedImages,
+    layers: layers, onAddLayer: handleAddLayer, onUpdateLayer: handleUpdateLayer, onRemoveLayer: handleRemoveLayer, onFlattenLayers: handleFlattenLayers,
+    onGenerateCameraAngles: handleGenerateCameraAngles, cameraAnglesState: cameraAnglesState, setCameraAnglesState: setCameraAnglesState, generatedAngleImages: generatedAngleImages,
+  };
+
+
   return (
     <div className="w-screen h-screen bg-zinc-950 text-white flex flex-col overflow-hidden">
+       <AnimatePresence>
+        {showDisclaimer && <DisclaimerModal onAccept={handleAcceptDisclaimer} />}
+      </AnimatePresence>
       <Header
         onGoHome={handleGoHome}
         onOpenFile={handleOpenFile}
@@ -512,9 +566,9 @@ const App: React.FC = () => {
         onSelectTool={handleToolSelect}
         onDeselect={handleDeselect}
       />
-      <main className="flex-1 flex flex-col md:flex-row overflow-hidden">
-        {/* Desktop Toolbar (Left) */}
-        <div className="hidden md:flex flex-shrink-0">
+      <main className="flex-1 flex flex-row overflow-hidden">
+        {/* Toolbar (Left) */}
+        <div className="flex-shrink-0">
           <Toolbar 
             activeTool={activeTool} 
             setActiveTool={handleToolSelect} 
@@ -522,7 +576,7 @@ const App: React.FC = () => {
           />
         </div>
 
-        {/* Center Content (Canvas + Mobile Toolbar) */}
+        {/* Center Content (Canvas) */}
         <div className="flex-1 flex flex-col relative overflow-hidden bg-zinc-950">
           <div className="flex-1 relative flex items-center justify-center overflow-hidden">
             {isGenerationViewVisible ? (
@@ -540,33 +594,63 @@ const App: React.FC = () => {
                     setCameraAnglesState({ status: 'selection', generationPrompts: [] });
                     setGeneratedAngleImages({});
                   }
-                  setIsOptionsPanelOpen(true);
+                  setIsToolPanelVisible(true);
                 }}
                 isGenerating={isLoading}
               />
             ) : currentImageUrl ? (
-              <EditorCanvas
-                  ref={editorCanvasRef}
-                  imageUrl={currentImageUrl}
-                  activeTool={activeTool}
-                  aspect={aspect}
-                  onSelectionChange={setSelection}
-                  zoom={zoom}
-                  setZoom={setZoom}
-                  pan={pan}
-                  setPan={setPan}
-                  layers={layers}
-              />
+              <>
+                <EditorCanvas
+                    ref={editorCanvasRef}
+                    imageUrl={currentImageUrl}
+                    activeTool={activeTool}
+                    aspect={aspect}
+                    onSelectionChange={setSelection}
+                    zoom={zoom}
+                    setZoom={setZoom}
+                    pan={pan}
+                    setPan={setPan}
+                    layers={layers}
+                />
+                
+                {/* Floating UI Controls */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  transition={{ type: 'tween', duration: 0.2 }}
+                  className="absolute bottom-4 right-4 z-30"
+                >
+                  <ZoomControls
+                      zoom={zoom}
+                      setZoom={setZoom}
+                      onReset={() => { setZoom(1); setPan({ x: 0, y: 0 }); }}
+                    />
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 10 }}
+                  transition={{ type: 'tween', duration: 0.2 }}
+                  className="absolute top-4 right-4 z-30"
+                >
+                    <button
+                      onClick={() => setIsToolPanelVisible(!isToolPanelVisible)}
+                      className={`p-2.5 rounded-lg transition-all duration-200 shadow-lg ${
+                          isToolPanelVisible
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-black/60 backdrop-blur-sm text-zinc-200 hover:bg-zinc-700'
+                      }`}
+                      aria-label="Toggle tool options"
+                      title="Toggle tool options"
+                    >
+                        <AdjustSlidersIcon className="w-6 h-6" />
+                    </button>
+                </motion.div>
+              </>
             ) : (
                 <p>Upload an image to get started.</p>
-            )}
-
-            {currentImageUrl && !isGenerationViewVisible && (
-              <ZoomControls
-                zoom={zoom}
-                setZoom={setZoom}
-                onReset={() => { setZoom(1); setPan({ x: 0, y: 0 }); }}
-              />
             )}
 
             {isLoading && !isGenerationViewVisible && (
@@ -589,85 +673,24 @@ const App: React.FC = () => {
                 </div>
             )}
           </div>
-          
-          {/* Mobile Toolbar */}
-          <div className="md:hidden flex-shrink-0">
-            {!isGenerationViewVisible && 
-              <Toolbar 
-                activeTool={activeTool} 
-                setActiveTool={handleToolSelect} 
-                disabled={isLoading} 
-              />
-            }
-          </div>
         </div>
 
-        {/* Right Side Panel (Desktop) / Bottom Sheet (Mobile) */}
-        {!isGenerationViewVisible && (
-            <div className="hidden md:flex md:w-80 md:flex-shrink-0">
-                <ToolOptions
-                    activeTool={activeTool} isLoading={isLoading} hasSelection={!!selection && selection.width > 0}
-                    onApplyGenerativeEdit={(prompt) => handleApplyGenerativeAction(generateEditedImage, prompt)}
-                    onApplyCrop={handleApplyCrop} onSetAspect={setAspect} isCropping={!!selection && selection.width > 0}
-                    onApplyAdjustment={(prompt) => runGenerativeTask(generateAdjustedImage, prompt)}
-                    onApplyFilter={(prompt) => runGenerativeTask(generateFilteredImage, prompt)}
-                    onApplyReplaceBackground={(prompt) => runGenerativeTask(generateReplacedBackgroundImage, prompt)}
-                    onApplyStudioEffect={(prompt) => runGenerativeTask(generateStudioEffect, prompt)}
-                    onApplyText={(text, style) => runGenerativeTask(generateInscribedText, text, style, selection)}
-                    onApplySky={(prompt) => runGenerativeTask(generateReplacedSky, prompt)}
-                    onApplyInsert={(prompt) => handleApplyGenerativeAction(generateInsertedObject, prompt)}
-                    onApplyColorGrade={(styleImage) => runGenerativeTask(generateColorGradedImage, styleImage)}
-                    onApplyFaceFusion={(faceRefImage) => runGenerativeTask(generateFusedFaceImage, faceRefImage)}
-                    onApplyClothingTransfer={(styleRefImage) => runGenerativeTask(generateStyleTransferredImage, styleRefImage)}
-                    onApplyFaceSwap={(faceRefImage) => runGenerativeTask(generateSwappedFaceImage, faceRefImage)}
-                    onApplyAddPerson={(options: AddPersonOptions) => runGenerativeTask(generateCompositedPersonImage, options)}
-                    onApplyMakeupTransfer={(makeupRefImage) => runGenerativeTask(generateMakeupTransferredImage, makeupRefImage)}
-                    onApplyFashion={(prompt) => runGenerativeTask(generateFashionImage, prompt)}
-                    onApplyMakeup={(prompt) => runGenerativeTask(generateMakeup, prompt)}
-                    onApplyRandomize={() => runGenerativeTask(expandImage, 'Be creative and completely transform this into a new, surprising image. Change the scene, style, and subject in an unexpected way.')}
-                    originalImageFile={originalImageFile} onGeneratePersonas={handleGeneratePersonas} onUsePersonaInEditor={handleUseGeneratedImageInEditor}
-                    personaState={personaState} setPersonaState={setPersonaState} generatedImages={generatedImages}
-                    layers={layers} onAddLayer={handleAddLayer} onUpdateLayer={handleUpdateLayer} onRemoveLayer={handleRemoveLayer} onFlattenLayers={handleFlattenLayers}
-                    onGenerateCameraAngles={handleGenerateCameraAngles} cameraAnglesState={cameraAnglesState} setCameraAnglesState={setCameraAnglesState} generatedAngleImages={generatedAngleImages}
-                />
-            </div>
-        )}
-
+        {/* Right Side Panel */}
         <AnimatePresence>
-          {isOptionsPanelOpen && activeTool !== 'none' && !isGenerationViewVisible && (
+          {!isGenerationViewVisible && isToolPanelVisible && (
             <motion.div
-              initial={{ y: "100%" }}
-              animate={{ y: "0%" }}
-              exit={{ y: "100%" }}
-              transition={{ type: "tween", duration: 0.3, ease: "easeInOut" }}
-              className="md:hidden fixed bottom-20 left-0 right-0 z-40 bg-zinc-900 rounded-t-2xl shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.3)] max-h-[60vh] flex flex-col"
+              className="flex-shrink-0 bg-zinc-900 overflow-hidden"
+              initial={{ width: 0 }}
+              animate={{ width: 320 }}
+              exit={{ width: 0 }}
+              transition={{ type: 'tween', duration: 0.3, ease: 'easeInOut' }}
             >
-              <ToolOptions
-                  activeTool={activeTool} isLoading={isLoading} hasSelection={!!selection && selection.width > 0}
-                  onApplyGenerativeEdit={(prompt) => handleApplyGenerativeAction(generateEditedImage, prompt)}
-                  onApplyCrop={handleApplyCrop} onSetAspect={setAspect} isCropping={!!selection && selection.width > 0}
-                  onApplyAdjustment={(prompt) => runGenerativeTask(generateAdjustedImage, prompt)}
-                  onApplyFilter={(prompt) => runGenerativeTask(generateFilteredImage, prompt)}
-                  onApplyReplaceBackground={(prompt) => runGenerativeTask(generateReplacedBackgroundImage, prompt)}
-                  onApplyStudioEffect={(prompt) => runGenerativeTask(generateStudioEffect, prompt)}
-                  onApplyText={(text, style) => runGenerativeTask(generateInscribedText, text, style, selection)}
-                  onApplySky={(prompt) => runGenerativeTask(generateReplacedSky, prompt)}
-                  onApplyInsert={(prompt) => handleApplyGenerativeAction(generateInsertedObject, prompt)}
-                  onApplyColorGrade={(styleImage) => runGenerativeTask(generateColorGradedImage, styleImage)}
-                  onApplyFaceFusion={(faceRefImage) => runGenerativeTask(generateFusedFaceImage, faceRefImage)}
-                  onApplyClothingTransfer={(styleRefImage) => runGenerativeTask(generateStyleTransferredImage, styleRefImage)}
-                  onApplyFaceSwap={(faceRefImage) => runGenerativeTask(generateSwappedFaceImage, faceRefImage)}
-                  onApplyAddPerson={(options: AddPersonOptions) => runGenerativeTask(generateCompositedPersonImage, options)}
-                  onApplyMakeupTransfer={(makeupRefImage) => runGenerativeTask(generateMakeupTransferredImage, makeupRefImage)}
-                  onApplyFashion={(prompt) => runGenerativeTask(generateFashionImage, prompt)}
-                  onApplyMakeup={(prompt) => runGenerativeTask(generateMakeup, prompt)}
-                  onApplyRandomize={() => runGenerativeTask(expandImage, 'Be creative and completely transform this into a new, surprising image. Change the scene, style, and subject in an unexpected way.')}
-                  originalImageFile={originalImageFile} onGeneratePersonas={handleGeneratePersonas} onUsePersonaInEditor={handleUseGeneratedImageInEditor}
-                  personaState={personaState} setPersonaState={setPersonaState} generatedImages={generatedImages}
-                  onClose={() => setIsOptionsPanelOpen(false)}
-                  layers={layers} onAddLayer={handleAddLayer} onUpdateLayer={handleUpdateLayer} onRemoveLayer={handleRemoveLayer} onFlattenLayers={handleFlattenLayers}
-                  onGenerateCameraAngles={handleGenerateCameraAngles} cameraAnglesState={cameraAnglesState} setCameraAnglesState={setCameraAnglesState} generatedAngleImages={generatedAngleImages}
-              />
+              <div className="w-80 h-full">
+                <ToolOptions 
+                  {...toolPanelProps}
+                  onClose={() => setIsToolPanelVisible(false)}
+                />
+              </div>
             </motion.div>
           )}
         </AnimatePresence>

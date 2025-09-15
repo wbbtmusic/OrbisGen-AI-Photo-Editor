@@ -84,10 +84,10 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onFileSelect, onGoToDesignStudi
 
 
   return (
-    <div className="w-full h-screen bg-zinc-950 flex flex-col items-center justify-center p-4 sm:p-8 animate-fade-in overflow-y-auto">
+    <div className="w-full h-screen bg-zinc-950 flex flex-col items-center p-4 sm:p-8 animate-fade-in overflow-y-auto">
         <input id="file-upload-homescreen" type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
 
-        <main className="w-full max-w-4xl mx-auto flex flex-col items-center flex-grow justify-center">
+        <main className="w-full max-w-4xl mx-auto flex flex-col items-center justify-center flex-grow">
             {/* Header */}
             <div className="text-center mb-10">
                 <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-white">
@@ -150,7 +150,9 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onFileSelect, onGoToDesignStudi
         )}
 
         {/* Footer */}
-        <footer className="w-full text-center text-xs text-zinc-600 py-4 flex-shrink-0">
+        <footer className="w-full text-center text-xs text-zinc-600 py-4 flex-shrink-0 space-y-1">
+            <p>Powered by Google Gemini</p>
+            <p>Developed by <a href="https://www.instagram.com/burakcanogut" target="_blank" rel="noopener noreferrer" className="underline hover:text-zinc-400 transition-colors">Burak Can Öğüt</a></p>
             <p>&copy; {new Date().getFullYear()} OrbisGen</p>
         </footer>
     </div>

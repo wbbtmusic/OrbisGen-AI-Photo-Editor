@@ -283,3 +283,8 @@ export const FlipHorizontalIcon: React.FC<{ className?: string }> = ({ className
         <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 8.25L21 12l-5.25 3.75" />
     </Icon>
 );
+export const MoreVertIcon: React.FC<{ className?: string }> = ({ className }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
+    </svg>
+);
