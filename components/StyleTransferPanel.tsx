@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
 */
 
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { UploadIcon } from './icons';
 
 interface StyleTransferPanelProps {
@@ -15,6 +15,21 @@ const StyleTransferPanel: React.FC<StyleTransferPanelProps> = ({ onApplyClothing
   const [styleRefFile, setStyleRefFile] = useState<File | null>(null);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  
+  useEffect(() => {
+    const handlePaste = (event: ClipboardEvent) => {
+        if (isLoading) return;
+        const file = event.clipboardData?.files?.[0];
+        if (file && file.type.startsWith('image/')) {
+            event.preventDefault();
+            setStyleRefFile(file);
+        }
+    };
+    document.addEventListener('paste', handlePaste);
+    return () => {
+        document.removeEventListener('paste', handlePaste);
+    };
+  }, [isLoading]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -108,7 +123,7 @@ const StyleTransferPanel: React.FC<StyleTransferPanelProps> = ({ onApplyClothing
             <div className="flex flex-col items-center justify-center text-center text-zinc-400 w-full h-full">
               <UploadIcon className="w-8 h-8 mb-2" />
               <span className="text-xs font-semibold">Click to upload</span>
-              <span className="text-xs">or drag & drop</span>
+              <span className="text-xs">or drag & drop / paste</span>
             </div>
           )}
         </label>

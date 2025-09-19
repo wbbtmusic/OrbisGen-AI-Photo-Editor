@@ -288,3 +288,19 @@ export const MoreVertIcon: React.FC<{ className?: string }> = ({ className }) =>
         <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
     </svg>
 );
+export const ChevronLeftIcon: React.FC<{ className?: string }> = ({ className }) => (
+    <Icon className={className}>
+        <path d="m15 18-6-6 6-6" />
+    </Icon>
+);
+export const ChevronRightIcon: React.FC<{ className?: string }> = ({ className }) => (
+    <Icon className={className}>
+        <path d="m9 18 6-6-6-6" />
+    </Icon>
+);
+export const PlusIcon: React.FC<{ className?: string }> = ({ className }) => (
+    <Icon className={className}>
+      <line x1="12" y1="5" x2="12" y2="19"></line>
+      <line x1="5" y1="12" x2="19" y2="12"></line>
+    </Icon>
+);

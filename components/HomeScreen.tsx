@@ -4,12 +4,12 @@
 */
 import React, { useState, useEffect, useCallback } from 'react';
 import { dataURLtoFile } from '../lib/utils';
-import { RecentProject } from '../types';
+import { RecentProject, Tool } from '../types';
 import { SparklesIcon, UploadIcon } from './icons';
 import { cn } from '../lib/utils';
 
 interface HomeScreenProps {
-  onFileSelect: (file: File) => void;
+  onFileSelect: (file: File, initialTool?: Tool) => void;
   onGoToDesignStudio: () => void;
 }
 
@@ -26,6 +26,7 @@ const ProjectCard: React.FC<{ project: RecentProject, onClick: () => void }> = (
 const HomeScreen: React.FC<HomeScreenProps> = ({ onFileSelect, onGoToDesignStudio }) => {
   const [recentProjects, setRecentProjects] = useState<RecentProject[]>([]);
   const [isDragging, setIsDragging] = useState(false);
+  const [initialTool, setInitialTool] = useState<Tool | undefined>(undefined);
 
   useEffect(() => {
     try {
@@ -39,24 +40,44 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onFileSelect, onGoToDesignStudi
     }
   }, []);
   
-  const handleFile = (file: File | null | undefined) => {
+  const handleFile = useCallback((file: File | null | undefined, tool?: Tool) => {
     if (file && file.type.startsWith('image/')) {
-        onFileSelect(file);
+        onFileSelect(file, tool);
     } else if (file) {
         alert('Please select a valid image file.');
     }
-  };
+  }, [onFileSelect]);
+
+  useEffect(() => {
+    const handlePaste = (event: ClipboardEvent) => {
+        const file = event.clipboardData?.files?.[0];
+        if (file && file.type.startsWith('image/')) {
+            event.preventDefault();
+            handleFile(file, initialTool);
+            setInitialTool(undefined);
+        }
+    };
+
+    document.addEventListener('paste', handlePaste);
+    return () => {
+        document.removeEventListener('paste', handlePaste);
+    };
+  }, [handleFile, initialTool]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    handleFile(e.target.files?.[0]);
+    const file = e.target.files?.[0];
+    handleFile(file, initialTool);
+    setInitialTool(undefined); // Reset after use
+    if(e.target) e.target.value = ''; // Allow re-uploading the same file
   };
 
   const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
       e.preventDefault();
       e.stopPropagation();
       setIsDragging(false);
-      handleFile(e.dataTransfer.files?.[0]);
-  }, [onFileSelect]);
+      handleFile(e.dataTransfer.files?.[0], initialTool);
+      setInitialTool(undefined);
+  }, [handleFile, initialTool]);
   
   const handleDragEvents = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -79,6 +100,12 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onFileSelect, onGoToDesignStudi
   };
 
   const openFilePicker = () => {
+    setInitialTool(undefined);
+    document.getElementById('file-upload-homescreen')?.click();
+  };
+
+  const handleTryFashionAI = () => {
+    setInitialTool('fashion');
     document.getElementById('file-upload-homescreen')?.click();
   };
 
@@ -87,7 +114,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onFileSelect, onGoToDesignStudi
     <div className="w-full h-screen bg-zinc-950 flex flex-col items-center p-4 sm:p-8 animate-fade-in overflow-y-auto">
         <input id="file-upload-homescreen" type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
 
-        <main className="w-full max-w-4xl mx-auto flex flex-col items-center justify-center flex-grow">
+        <main className="w-full max-w-5xl mx-auto flex flex-col items-center justify-center flex-grow">
             {/* Header */}
             <div className="text-center mb-10">
                 <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-white">
@@ -98,27 +125,46 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onFileSelect, onGoToDesignStudi
                 </p>
             </div>
             
-            {/* Main Action Zone */}
-            <div
-                onClick={openFilePicker}
-                onDrop={handleDrop}
-                onDragEnter={handleDragEvents}
-                onDragLeave={handleDragEvents}
-                onDragOver={handleDragEvents}
-                className={cn(
-                    "w-full max-w-xl cursor-pointer rounded-xl border-2 border-dashed border-zinc-800 bg-zinc-900 p-10 text-center transition-all duration-200",
-                    isDragging ? "border-blue-500 bg-blue-900/20 scale-105" : "hover:border-zinc-600 hover:bg-zinc-800/50"
-                )}
-            >
-                <div className="flex flex-col items-center text-zinc-500 pointer-events-none">
-                    <UploadIcon className="w-12 h-12 mb-4 text-zinc-600" />
-                    <span className="font-semibold text-zinc-300">Drag & drop an image</span>
-                    <p className="text-sm">or click to browse your files</p>
+             {/* Main Action Zone & Promo */}
+            <div className="w-full flex flex-col lg:flex-row items-stretch justify-center gap-8">
+                {/* Upload Zone */}
+                <div
+                    onClick={openFilePicker}
+                    onDrop={handleDrop}
+                    onDragEnter={handleDragEvents}
+                    onDragLeave={handleDragEvents}
+                    onDragOver={handleDragEvents}
+                    className={cn(
+                        "flex-1 flex flex-col items-center justify-center cursor-pointer rounded-xl border-2 border-dashed border-zinc-800 bg-zinc-900 p-10 text-center transition-all duration-200",
+                        isDragging ? "border-blue-500 bg-blue-900/20 scale-105" : "hover:border-zinc-600 hover:bg-zinc-800/50"
+                    )}
+                >
+                    <div className="flex flex-col items-center text-zinc-500 pointer-events-none">
+                        <UploadIcon className="w-12 h-12 mb-4 text-zinc-600" />
+                        <span className="font-semibold text-zinc-300">Drag & drop an image or paste</span>
+                        <p className="text-sm">or click to browse your files</p>
+                    </div>
+                </div>
+
+                {/* Fashion AI Promo */}
+                <div className="flex-1">
+                    <div className="group h-full relative rounded-xl p-6 bg-gradient-to-br from-blue-600 to-purple-700 text-white shadow-2xl shadow-blue-500/30 transition-all duration-300 hover:shadow-purple-500/50 flex flex-col justify-center">
+                        <h2 className="text-2xl font-bold mb-2">Major Update: Fashion AI</h2>
+                        <p className="text-sm text-blue-100 mb-4">
+                            Bring your style to life! Create a personal model and try on outfits with our new Virtual Try-On tool.
+                        </p>
+                        <button
+                            onClick={handleTryFashionAI}
+                            className="bg-white text-black font-semibold py-2 px-5 rounded-lg transition-all hover:bg-zinc-200 active:scale-95 group-hover:scale-105 self-start"
+                        >
+                            Try Now
+                        </button>
+                    </div>
                 </div>
             </div>
             
             {/* Separator / Secondary Action */}
-            <div className="my-8 flex items-center w-full max-w-xl">
+            <div className="flex items-center w-full max-w-xl mt-8">
                 <div className="flex-grow border-t border-zinc-800"></div>
                 <span className="flex-shrink mx-4 text-xs text-zinc-600 uppercase font-medium">Or</span>
                 <div className="flex-grow border-t border-zinc-800"></div>
@@ -126,7 +172,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onFileSelect, onGoToDesignStudi
             
             <button
                 onClick={onGoToDesignStudio}
-                className="flex items-center gap-2 bg-blue-600 text-white font-semibold py-3 px-6 rounded-xl transition-all hover:bg-blue-500 active:bg-blue-700 hover:scale-105 active:scale-100 shadow-md shadow-blue-600/30 hover:shadow-xl hover:shadow-blue-500/50"
+                className="mt-8 flex items-center gap-2 bg-blue-600 text-white font-semibold py-3 px-6 rounded-xl transition-all hover:bg-blue-500 active:bg-blue-700 hover:scale-105 active:scale-100 shadow-md shadow-blue-600/30 hover:shadow-xl hover:shadow-blue-500/50"
             >
                 <SparklesIcon className="w-5 h-5" />
                 Create an Image with AI

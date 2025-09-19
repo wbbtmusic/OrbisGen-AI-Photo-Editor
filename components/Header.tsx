@@ -83,87 +83,82 @@ const Header: React.FC<HeaderProps> = (props) => {
         </div>
         
         {/* --- BUTTONS CONTAINER --- */}
-        {/* This container stacks buttons on mobile and lays them flat on desktop */}
-        <div className="flex flex-col sm:flex-row items-end sm:items-center gap-y-2 gap-x-1 sm:gap-x-2">
-            {/* Top Row on Mobile / Main Section on Desktop */}
-            <div className="flex items-center gap-1 sm:gap-2">
-                 {/* Search (Desktop only) */}
-                <div ref={searchContainerRef} className="relative hidden sm:block">
-                    <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none z-10" />
-                    <input
-                        type="text"
-                        placeholder="Search tools..."
-                        value={searchTerm}
-                        onChange={(e) => onSearchTermChange(e.target.value)}
-                        className="relative w-32 bg-zinc-800 border border-zinc-700 rounded-full pl-9 pr-3 py-1.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all duration-300 focus:w-48"
-                    />
-                    <AnimatePresence>
-                    {searchTerm && (
-                        <motion.div
-                        initial={{ opacity: 0, y: -5 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -5 }}
-                        transition={{ duration: 0.15 }}
-                        className="absolute top-full right-0 mt-2 w-56 bg-zinc-800 border border-zinc-700 rounded-md shadow-lg p-1 z-50"
-                        >
-                        {filteredTools.length > 0 ? filteredTools.map(tool => (
-                            <button key={tool.name} onClick={() => onSelectTool(tool.name)} className="w-full flex items-center gap-3 px-3 py-2 text-left text-sm text-zinc-200 hover:bg-blue-500 hover:text-black rounded">
-                            <tool.icon className="w-5 h-5" />
-                            <span>{tool.label}</span>
-                            </button>
-                        )) : <p className="text-xs text-zinc-500 text-center p-2">No tools found.</p>}
-                        </motion.div>
-                    )}
-                    </AnimatePresence>
-                </div>
+        <div className="flex items-center gap-x-2">
+            {/* Search (Desktop only) */}
+            <div ref={searchContainerRef} className="relative hidden sm:block">
+                <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none z-10" />
+                <input
+                    type="text"
+                    placeholder="Search tools..."
+                    value={searchTerm}
+                    onChange={(e) => onSearchTermChange(e.target.value)}
+                    className="relative w-32 bg-zinc-800 border border-zinc-700 rounded-full pl-9 pr-3 py-1.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all duration-300 focus:w-48"
+                />
+                <AnimatePresence>
+                {searchTerm && (
+                    <motion.div
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -5 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute top-full right-0 mt-2 w-56 bg-zinc-800 border border-zinc-700 rounded-md shadow-lg p-1 z-50"
+                    >
+                    {filteredTools.length > 0 ? filteredTools.map(tool => (
+                        <button key={tool.name} onClick={() => onSelectTool(tool.name)} className="w-full flex items-center gap-3 px-3 py-2 text-left text-sm text-zinc-200 hover:bg-blue-500 hover:text-black rounded">
+                        <tool.icon className="w-5 h-5" />
+                        <span>{tool.label}</span>
+                        </button>
+                    )) : <p className="text-xs text-zinc-500 text-center p-2">No tools found.</p>}
+                    </motion.div>
+                )}
+                </AnimatePresence>
+            </div>
 
+            {/* Action Buttons */}
+            <div className="flex flex-wrap justify-end items-center gap-1 sm:gap-2 sm:flex-nowrap">
+                <button 
+                    onClick={onRotate}
+                    disabled={!hasImage}
+                    className="p-2 rounded-lg text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    aria-label="Rotate Clockwise"
+                    title="Rotate 90°"
+                >
+                    <RotateClockwiseIcon className="w-5 h-5" />
+                </button>
+                <button 
+                    onClick={onFlipHorizontal}
+                    disabled={!hasImage}
+                    className="p-2 rounded-lg text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    aria-label="Flip Horizontal"
+                    title="Flip Horizontal"
+                >
+                    <FlipHorizontalIcon className="w-5 h-5" />
+                </button>
+                
                 {/* Divider (Desktop only) */}
                 <div className="h-6 w-px bg-zinc-700 mx-1 hidden sm:block" />
-
-                {/* Main Actions Group */}
-                <div className="flex items-center gap-1 sm:gap-2">
-                    <button 
-                        onClick={onRotate}
-                        disabled={!hasImage}
-                        className="p-2 rounded-lg text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        aria-label="Rotate Clockwise"
-                        title="Rotate 90°"
-                    >
-                        <RotateClockwiseIcon className="w-5 h-5" />
-                    </button>
-                    <button 
-                        onClick={onFlipHorizontal}
-                        disabled={!hasImage}
-                        className="p-2 rounded-lg text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        aria-label="Flip Horizontal"
-                        title="Flip Horizontal"
-                    >
-                        <FlipHorizontalIcon className="w-5 h-5" />
-                    </button>
-                    <div className="h-6 w-px bg-zinc-700 mx-1" />
-                    <button 
-                        onClick={onOpenFile}
-                        className="p-2 rounded-lg text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors"
-                        aria-label="Open File"
-                        title="Open File"
-                    >
-                        <OpenFileIcon className="w-5 h-5" />
-                    </button>
-                    <button 
-                        onClick={onDownload}
-                        disabled={!hasImage}
-                        className="p-2 rounded-lg text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        aria-label="Download Image"
-                        title="Download Image"
-                    >
-                        <DownloadIcon className="w-5 h-5" />
-                    </button>
-                </div>
-            </div>
-            {/* Bottom Row on Mobile / Merged into Main on Desktop */}
-            <div className="flex items-center gap-1 sm:gap-2">
-                 {/* Divider (Desktop only) */}
+                
+                <button 
+                    onClick={onOpenFile}
+                    className="p-2 rounded-lg text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors"
+                    aria-label="Open File"
+                    title="Open File"
+                >
+                    <OpenFileIcon className="w-5 h-5" />
+                </button>
+                <button 
+                    onClick={onDownload}
+                    disabled={!hasImage}
+                    className="p-2 rounded-lg text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    aria-label="Download Image"
+                    title="Download Image"
+                >
+                    <DownloadIcon className="w-5 h-5" />
+                </button>
+                
+                {/* Divider (Desktop only) */}
                 <div className="h-6 w-px bg-zinc-700 mx-1 hidden sm:block" />
+                
                 <button 
                     onClick={onUndo}
                     disabled={!canUndo}

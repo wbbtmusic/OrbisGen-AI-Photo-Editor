@@ -14,7 +14,7 @@ import {
     SkyIcon, InsertIcon, AddPersonIcon, TextGenIcon, CameraAnglesIcon, 
     PortraitIcon, FashionIcon, MakeupIcon, MakeupTransferIcon, 
     StyleTransferIcon, FaceSwapIcon, FaceFusionIcon, PaletteIcon, 
-    ColorGradeIcon, StudioIcon, PersonasIcon, RandomizeIcon
+    ColorGradeIcon, StudioIcon, RandomizeIcon
 } from './icons';
 
 export interface ToolDefinition {
@@ -34,7 +34,7 @@ export const toolCategories: ToolCategory[] = [
     name: 'Trends',
     icon: TrendsCategoryIcon,
     tools: [
-      { name: 'personas', icon: PersonasIcon, label: 'AI Personas' },
+      { name: 'aestheticAI', icon: PaletteIcon, label: 'Aesthetic AI' },
       { name: 'addPerson', icon: AddPersonIcon, label: 'Add Person' },
       { name: 'cameraAngles', icon: CameraAnglesIcon, label: 'Camera Angles' },
       { name: 'fashion', icon: FashionIcon, label: 'Fashion AI' },
@@ -85,10 +85,10 @@ export const toolCategories: ToolCategory[] = [
     name: 'AI Effects & Styles',
     icon: StyleEffectsCategoryIcon,
     tools: [
-      { name: 'filters', icon: PaletteIcon, label: 'Artistic Filters' },
+      { name: 'filters', icon: StyleEffectsCategoryIcon, label: 'Artistic Filters' },
       { name: 'colorGrade', icon: ColorGradeIcon, label: 'Color Grade' },
       { name: 'studio', icon: StudioIcon, label: 'Studio AI' },
-      { name: 'personas', icon: PersonasIcon, label: 'AI Personas' },
+      { name: 'aestheticAI', icon: PaletteIcon, label: 'Aesthetic AI' },
       { name: 'cameraAngles', icon: CameraAnglesIcon, label: 'Camera Angles' },
       { name: 'randomize', icon: RandomizeIcon, label: 'Randomize' },
     ],

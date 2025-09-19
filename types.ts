@@ -26,7 +26,7 @@ export type Tool =
   | 'fashion'
   | 'makeup'
   | 'randomize'
-  | 'personas'
+  | 'aestheticAI'
   | 'layers'
   | 'cameraAngles'
   | 'none';
@@ -65,10 +65,10 @@ export interface Theme {
   getPrompt: (category: string) => string;
 }
 
-export type PersonaStatus = 'theme-selection' | 'generating' | 'results-shown';
+export type AestheticStatus = 'theme-selection' | 'generating' | 'results-shown';
 
-export interface PersonaState {
-  status: PersonaStatus;
+export interface AestheticState {
+  status: AestheticStatus;
   selectedTheme: Theme | null;
   generationCategories: string[];
 }
@@ -110,4 +110,16 @@ export interface GeneratedAngleImage {
   url?: string;
   status: ImageGenerationStatus;
   error?: string;
+}
+
+// Types for new Fashion AI / Virtual Try-On tool
+export interface WardrobeItem {
+  id: string;
+  name: string;
+  url: string;
+}
+
+export interface OutfitLayer {
+  garment: WardrobeItem | null; // null represents the base model layer
+  poseImages: Record<string, string>; // Maps pose instruction to image URL
 }

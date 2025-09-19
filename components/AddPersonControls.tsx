@@ -51,6 +51,21 @@ const AddPersonControls: React.FC<AddPersonControlsProps> = ({ onOptionsChange, 
     });
     return () => { isCancelled = true; };
   }, [personRefImage]);
+  
+  useEffect(() => {
+    const handlePaste = (event: ClipboardEvent) => {
+        if(disabled) return;
+        const file = event.clipboardData?.files?.[0];
+        if (file && file.type.startsWith('image/')) {
+            event.preventDefault();
+            setPersonRefImage(file);
+        }
+    };
+    document.addEventListener('paste', handlePaste);
+    return () => {
+        document.removeEventListener('paste', handlePaste);
+    };
+  }, [disabled]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -155,7 +170,7 @@ const AddPersonControls: React.FC<AddPersonControlsProps> = ({ onOptionsChange, 
           {!personRefImage && !isProcessingPreview && (
             <div className="flex flex-col items-center justify-center text-center text-zinc-400">
               <UploadIcon className="w-6 h-6 mb-1" />
-              <span className="text-xs font-semibold">Upload Reference Image</span>
+              <span className="text-xs font-semibold">Upload / Paste Reference</span>
             </div>
           )}
         </label>

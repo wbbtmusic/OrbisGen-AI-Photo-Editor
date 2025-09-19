@@ -4,7 +4,8 @@
 */
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AddPersonOptions, GeneratedImage, AestheticState, Theme, Tool, Layer, CameraAnglesState, GeneratedAngleImage, OutfitLayer, WardrobeItem } from '../types';
+// Fix: Changed PersonaState to AestheticState to match exported types.
+import { AddPersonOptions, GeneratedImage, AestheticState, Theme, Tool, Layer, CameraAnglesState, GeneratedAngleImage } from '../types';
 import { toolCategories, ToolDefinition } from './Toolbar';
 import { CloseIcon } from './icons';
 
@@ -53,6 +54,7 @@ export const toolDisplayName: Record<Tool, string> = {
   fashion: 'Fashion AI',
   makeup: 'Makeup AI',
   randomize: 'Randomize',
+  // Fix: Renamed 'personas' to 'aestheticAI' to match the Tool type.
   aestheticAI: 'Aesthetic AI',
   cameraAngles: 'Camera Angles',
   layers: 'Layers',
@@ -91,28 +93,11 @@ export interface ToolOptionsProps {
     addPersonOptions: AddPersonOptions;
     onAddPersonOptionsChange: React.Dispatch<React.SetStateAction<AddPersonOptions>>;
     onApplyMakeupTransfer: (makeupRefImage: File) => void;
-    
-    // Fashion AI Props
-    fashionState: {
-        modelImageUrl: string | null;
-        outfitHistory: OutfitLayer[];
-        currentOutfitIndex: number;
-        currentPoseIndex: number;
-        wardrobe: WardrobeItem[];
-        status: 'create_model' | 'dressing_room';
-    };
-    onCreateModel: () => void;
-    onGarmentSelect: (file: File, info: WardrobeItem) => void;
-    onRemoveLastGarment: () => void;
-    onResetFashion: () => void;
-    onFinishFashion: () => void;
-    loadingMessage: string;
-    error: string | null;
-
-
+    onApplyFashion: (imageUrl: string) => void;
     onApplyMakeup: (prompt: string) => void;
     onApplyRandomize: () => void;
     originalImageFile: File | null;
+    // Fix: Updated prop names for consistency with the rest of the app.
     onGenerateAesthetics: (theme: Theme, categories:string[]) => void;
     onUseGeneratedImageInEditor: (imageUrl: string) => void;
     aestheticState: AestheticState;
@@ -174,16 +159,8 @@ const ToolOptions: React.FC<ToolOptionsProps> = (props) => {
           return <MakeupTransferPanel onApplyMakeupTransfer={props.onApplyMakeupTransfer} isLoading={isLoading} />;
         case 'fashion':
           return <FashionPanel 
-                    originalImageFile={props.originalImageFile}
-                    fashionState={props.fashionState}
-                    isLoading={props.isLoading}
-                    loadingMessage={props.loadingMessage}
-                    error={props.error}
-                    onCreateModel={props.onCreateModel}
-                    onGarmentSelect={props.onGarmentSelect}
-                    onRemoveLastGarment={props.onRemoveLastGarment}
-                    onReset={props.onResetFashion}
-                    onFinish={props.onFinishFashion}
+                    originalImageFile={props.originalImageFile} 
+                    onApplyToEditor={props.onApplyFashion} 
                  />;
         case 'makeup':
           return <MakeupPanel onApplyMakeup={props.onApplyMakeup} isLoading={isLoading} />;
@@ -198,6 +175,7 @@ const ToolOptions: React.FC<ToolOptionsProps> = (props) => {
               onFlatten={props.onFlattenLayers}
               isLoading={isLoading}
           />;
+        // Fix: Renamed case from 'personas' to 'aestheticAI' and updated props.
         case 'aestheticAI':
           return <AestheticPanel onGenerate={props.onGenerateAesthetics} />;
         case 'cameraAngles':

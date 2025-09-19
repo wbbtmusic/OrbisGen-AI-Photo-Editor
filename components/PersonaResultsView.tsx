@@ -8,7 +8,7 @@ import { type GeneratedImage, type ImageGenerationStatus } from '../types';
 import { createAlbumPage } from '../lib/albumUtils';
 import { DownloadIcon, TextGenIcon, SparklesIcon } from './icons';
 
-interface PersonaResultsViewProps {
+interface AestheticResultsViewProps {
     title: string;
     subtitle?: string | null;
     generationCategories: string[];
@@ -83,7 +83,7 @@ const GeneratedImageCard: React.FC<{
 };
 
 
-const PersonaResultsView: React.FC<PersonaResultsViewProps> = ({
+const AestheticResultsView: React.FC<AestheticResultsViewProps> = ({
     title,
     subtitle,
     generationCategories,
@@ -277,4 +277,4 @@ const PersonaResultsView: React.FC<PersonaResultsViewProps> = ({
     );
 };
 
-export default PersonaResultsView;
+export default AestheticResultsView;

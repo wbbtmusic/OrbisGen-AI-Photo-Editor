@@ -8,7 +8,7 @@ import { createAiTheme, THEMES } from '../services/geminiService';
 import AiThemeGenerator from './AiThemeGenerator';
 import { type Theme } from '../types';
 
-interface PersonaPanelProps {
+interface AestheticPanelProps {
     onGenerate: (theme: Theme, categories: string[]) => void;
 }
 
@@ -19,7 +19,7 @@ interface CustomTheme {
     categories: string[];
 }
 
-const PersonaPanel: React.FC<PersonaPanelProps> = ({
+const AestheticPanel: React.FC<AestheticPanelProps> = ({
     onGenerate,
 }) => {
     const [imageCounts, setImageCounts] = useState<Record<string, number>>({});
@@ -76,8 +76,8 @@ const PersonaPanel: React.FC<PersonaPanelProps> = ({
     }
     
     const allThemesForRender = [
-        ...Object.entries(THEMES).map(([key, theme]) => ({ key, ...theme, isCustom: false })),
-        ...customThemes.map(theme => ({ ...theme, isCustom: true }))
+        ...customThemes.map(theme => ({ ...theme, isCustom: true })),
+        ...Object.entries(THEMES).map(([key, theme]) => ({ key, ...theme, isCustom: false }))
     ];
 
     return (
@@ -90,7 +90,7 @@ const PersonaPanel: React.FC<PersonaPanelProps> = ({
             className="h-full flex flex-col"
         >
             <div className="flex flex-col gap-4">
-                <p className="text-sm text-center text-zinc-400">Discover alternate versions of yourself. Choose or create a theme to begin.</p>
+                <p className="text-sm text-center text-zinc-400">Craft your unique visual style. Choose or create a theme to begin.</p>
                 <AiThemeGenerator onThemeCreated={handleAiThemeCreated} setLoading={setIsAiThemeLoading} />
 
                 <div className="space-y-4">
@@ -125,4 +125,4 @@ const PersonaPanel: React.FC<PersonaPanelProps> = ({
     );
 };
 
-export default PersonaPanel;
+export default AestheticPanel;

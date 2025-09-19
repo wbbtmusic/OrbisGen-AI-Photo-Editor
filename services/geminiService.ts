@@ -7,29 +7,29 @@ import { GoogleGenAI, GenerateContentResponse, Modality, HarmCategory, HarmBlock
 import { AddPersonOptions, Theme, AspectRatio } from "../types";
 
 export const THEMES: Record<string, Omit<Theme, 'key'>> = {
-  professional: {
-    title: 'Professional Headshots',
-    description: 'Generate polished, corporate-style headshots for your professional profiles.',
-    categories: ['Corporate CEO', 'Startup Founder', 'Creative Director', 'LinkedIn Profile', 'Author Photo', 'Consultant'],
-    getPrompt: (category: string) => `Reimagine the person as a ${category}. The image should be a high-quality, professional headshot suitable for a corporate website or professional network. The background should be a clean, professional setting (like a modern office or a neutral studio backdrop). The person's facial features and identity must be clearly preserved. The output must be a photorealistic image.`,
+  albumArt: {
+    title: 'Album Art',
+    description: 'Design captivating covers for any music genre, from indie pop to psychedelic rock.',
+    categories: ['90s R&B Classic', 'Indie Acoustic', 'Psychedelic Rock', 'Lo-fi Beats', 'Hyperpop Glitch', '70s Folk'],
+    getPrompt: (category: string) => `Generate a photorealistic, high-concept album cover for the genre: '${category}'. The image should be square (1:1 aspect ratio), visually striking, and suitable for a musical release. Avoid text unless it's integral to the art style. The person's identity and key features must be preserved but stylized to fit the genre's aesthetic.`,
   },
-  fantasy: {
-    title: 'Fantasy Avatars',
-    description: 'Transform your portrait into a character from a high-fantasy world.',
-    categories: ['Noble Elf', 'Wise Wizard', 'Brave Knight', 'Mysterious Rogue', 'Dwarven Blacksmith', 'Forest Dryad'],
-    getPrompt: (category: string) => `Transform the person into a fantasy character: a ${category}. This should include appropriate fantasy-style clothing, accessories, and a fitting magical or medieval background. The person's facial features and identity must be clearly preserved but integrated into the fantasy aesthetic. The style should be epic, detailed, and photorealistic fantasy art.`,
+  cinematic: {
+    title: 'Cinematic Styles',
+    description: 'Reimagine your photo as a still from a movie, with distinct directorial styles.',
+    categories: ['Moody Film Noir', 'Wes Anderson Whimsy', 'Epic Sci-Fi', 'Ghibli-Inspired Wonder', 'Gritty Action Film', 'Romantic Comedy'],
+    getPrompt: (category: string) => `Transform the photo into a cinematic still in the style of a '${category}' film. Apply the genre's characteristic color grading, lighting, and composition. The person's identity and key features must be preserved, but they should look like a character in that movie. The result must be photorealistic.`,
   },
-  cyberpunk: {
-    title: 'Cyberpunk Edgerunners',
-    description: 'Enter a high-tech, low-life future with neon-drenched cyberpunk aesthetics.',
-    categories: ['Netrunner', 'Street Samurai', 'Corporate Agent', 'Ripperdoc', 'Nomad', 'Techie'],
-    getPrompt: (category:string) => `Reimagine the person as a Cyberpunk ${category}. The image should be set in a neon-lit, rainy, futuristic city. Include cybernetic enhancements, futuristic clothing, and a gritty, high-tech aesthetic. The person's facial features and identity must be clearly preserved. The output must be a photorealistic image with a cinematic, Blade Runner-esque feel.`,
+  aesthetics: {
+    title: 'Internet Aesthetics',
+    description: 'Explore popular online visual styles, from cozy cottagecore to nostalgic Y2K.',
+    categories: ['Cottagecore Dream', 'Dark Academia', 'Y2K Nostalgia', 'Minimalist Serenity', 'Urban Grunge', 'Fairycore'],
+    getPrompt: (category: string) => `Recreate the image in the popular internet aesthetic known as '${category}'. This includes the specific color palettes, clothing, setting, and mood associated with that style. The person's identity and key features must be perfectly preserved while being integrated into the aesthetic. The output should be a high-quality, photorealistic image.`,
   },
-  historical: {
-    title: 'Historical Portraits',
-    description: 'Travel back in time and see yourself as a figure from a different era.',
-    categories: ['Roman Senator', 'Viking Shieldmaiden', 'Victorian Aristocrat', '1920s Flapper', 'Ancient Egyptian Royalty', 'Renaissance Artist'],
-    getPrompt: (category: string) => `Recreate the person's portrait in the style of a ${category}. This should include historically appropriate clothing, hairstyle, and a setting that evokes the correct time period. The person's facial features and identity must be preserved. The final image should look like a realistic painting or photograph from that era.`
+  photography: {
+    title: 'Photography & Film',
+    description: 'Emulate the look of classic film stocks and photographic techniques.',
+    categories: ['Vintage Film Look (70s)', 'Lomography Toy Camera', 'Soft Focus Dream', 'Golden Hour Portrait', 'Polaroid Instant Photo', 'Tintype Photograph'],
+    getPrompt: (category: string) => `Apply a '${category}' effect to the image. This should include realistic grain, color shifts, light leaks (if appropriate), and the specific depth of field characteristic of that photographic style. The person's core identity, features, and pose must be preserved. The output must look like an authentic photograph taken with that technique or film.`,
   },
 };
 
@@ -689,25 +689,34 @@ export const generateCompositedPersonImage = async (
         : "The pose of the main subject may be slightly and naturally adjusted to better interact with the new person, but their identity and general position must be preserved.";
 
     const lightingInstruction = options.lightingMatch === 'match'
-        ? "CRITICAL COLOR & LIGHTING INTEGRATION: The added person must be flawlessly lit to match the lighting, shadows, and color grading of the Original Image. They must look like they were photographed in that scene at the same time."
+        ? "The added person must be flawlessly lit to match the lighting, shadows, and color grading of the Original Image. They must look like they were photographed in that scene at the same time."
         : "The original lighting on the added person should be kept as much as possible, for a collage effect."
 
-    const prompt = `You are a master digital compositor AI. Your task is to add a person to the provided 'Original Image'.
+    const prompt = `You are a master digital compositor AI, specializing in hyper-realistic subject integration. Your task is to flawlessly add a person to the provided 'Original Image'. The final result must be indistinguishable from a single, untouched photograph.
 
-**Person Source:** ${personSourcePrompt}
-**Placement:** Place the new person on the ${options.placement} side of the main subject.
-**Interaction/Pose:** The new person's pose should be natural for the scene. ${options.familiarity}. Their gaze should be ${options.gazeDirection} and their face should be ${options.faceDirection}. If a custom pose is specified, prioritize it: "${options.posePrompt}". Any generated pose must be physically plausible.
-**Style:** The style should be photorealistic. Prioritize this style: ${options.style}.
+//-- PERSON SPECIFICATION --//
+Source: ${personSourcePrompt}
+Style: The generated person and the final image must be photorealistic. Prioritize this style: ${options.style}.
 
-CRITICAL INSTRUCTIONS:
-1.  **Analyze Scene Geometry:** Analyze the perspective, scale, and 3D space of the original image.
-2.  **Insert Person:** Place the new person into the scene, scaled correctly relative to the environment and any existing subjects.
-3.  **${lightingInstruction}**
-4.  **Main Subject Preservation:** ${posePreservation} The main subject's identity, facial features, and clothing must always be perfectly preserved.
-5.  **Expand Canvas if Necessary:** If the new person does not fit within the original dimensions, you are allowed to expand the canvas (outpainting) to accommodate them naturally. The main subject from the original image should remain central.
-6.  **Seamless Integration:** The final composition must be seamless and photorealistic.
+//-- COMPOSITION & POSE --//
+Placement: Place the new person on the ${options.placement} side of the main subject. They should be integrated naturally into the scene's depth and perspective.
+Interaction/Pose: The new person's pose must be physically plausible and appropriate for the scene. The primary interaction is defined as: "${options.familiarity}".
+Gaze: Their gaze should be ${options.gazeDirection}.
+Face Orientation: Their face should be ${options.faceDirection}.
+Custom Pose: If a custom pose is specified, it is the highest priority: "${options.posePrompt}".
 
-Output: Return ONLY the final composited image. Do not return text.`;
+//-- NON-NEGOTIABLE CRITICAL RULES --//
+1.  **IDENTITY PRESERVATION (NEW PERSON):** If a "Reference Person Image" is provided, the identity, facial features, ethnicity, and unique characteristics of the person in that reference image MUST be perfectly preserved in the added person.
+2.  **IDENTITY PRESERVATION (MAIN SUBJECT):** The identity, facial features, clothing, and pose of the person already in the 'Original Image' MUST be perfectly preserved. ${posePreservation}
+3.  **SCENE & LIGHTING INTEGRATION:**
+    -   **Analyze First:** Before rendering, you MUST analyze the 'Original Image' for its lighting direction, color temperature, shadow softness, and lens properties (depth of field, perspective).
+    -   **Flawless Match:** ${lightingInstruction} Any mismatch in lighting is a failure.
+4.  **SEAMLESS COMPOSITION:**
+    -   The added person must be scaled correctly relative to the environment and any existing subjects.
+    -   The integration must be seamless, with no visible edges or artifacts.
+5.  **CANVAS MANAGEMENT:** If the new person does not fit, you are authorized to expand the canvas (outpainting) to create a natural composition. The original image content must not be cropped.
+
+Output: You must return ONLY the final, composited image. Do not output any text, explanation, or commentary.`;
 
     parts.push({ text: prompt });
 
@@ -772,45 +781,6 @@ export const generateMakeupTransferredImage = async (
 };
 
 /**
- * Changes the clothing of a person in an image based on a text prompt.
- * @param originalImage The image of the person.
- * @param prompt The description of the new clothing.
- * @returns A promise that resolves to the data URL of the edited image.
- */
-export const generateFashionImage = async (
-    originalImage: File,
-    prompt: string,
-): Promise<string> => {
-    console.log(`Starting fashion generation with prompt: ${prompt}`);
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
-    
-    const originalImagePart = await fileToPart(originalImage);
-    const textPart = { text: `You are an AI fashion stylist. Your task is to change the clothing of the person in this image based on the user's request.
-    
-    Clothing Request: "${prompt}"
-    
-    CRITICAL INSTRUCTIONS:
-    1.  **CRITICAL POSE & IDENTITY PRESERVATION:** You MUST perfectly preserve the pose, angle, facial expression, hair, and identity of the person. Do not change them.
-    2.  **CRITICAL BACKGROUND PRESERVATION:** The background of the image MUST be preserved.
-    3.  **Realistic Fit:** The new clothing must realistically fit the person's body and pose.
-    4.  **CRITICAL COLOR & LIGHTING INTEGRATION:** The new clothing must be flawlessly lit to match the lighting, shadows, and color grading of the original image.
-    5.  **Preserve Dimensions:** The final image MUST have the exact same dimensions as the original image.
-    
-    Output: Return ONLY the final edited image. Do not return text.` };
-
-    const response: GenerateContentResponse = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-image-preview',
-        contents: { parts: [originalImagePart, textPart] },
-        config: {
-          safetySettings,
-          responseModalities: [Modality.IMAGE, Modality.TEXT],
-        },
-    });
-    
-    return handleApiResponse(response, 'fashion generation');
-};
-
-/**
  * Applies makeup to a person in an image based on a text prompt.
  * @param originalImage The image of the person.
  * @param prompt The description of the makeup style.
@@ -829,7 +799,7 @@ export const generateMakeup = async (
     Makeup Request: "${prompt}"
     
     CRITICAL INSTRUCTIONS:
-    1.  **CRITICAL IDENTITY & POSE PRESERVATION:** You MUST perfectly preserve the facial features, identity, pose, expression, and hair of the person. Only add the described makeup.
+    1.  **CRITICAL IDENTITY & POSE PRESERVATION:** You MUST perfectly preserve the facial features, ethnicity, bone structure, identity, pose, expression, and hair of the person. Only add the described makeup. Do NOT alter their core facial structure.
     2.  **CRITICAL BACKGROUND PRESERVATION:** The background of the image MUST be preserved.
     3.  **Preserve Dimensions:** The final image MUST have the exact same dimensions as the original image.
     
@@ -1055,7 +1025,7 @@ export const compositePersonIntoScene = async (
         prompt: personOptions.prompt || '',
         personRefImage: personOptions.personRefImage || null,
         placement: personOptions.placement || 'center',
-        familiarity: personOptions.familiarity || 'Pose the person to be standing naturally and respectfully within the scene.',
+        familiarity: personOptions.familiarity || 'Pose the added person naturally within the scene, respecting the environment and any implied action. The interaction should be neutral and non-intrusive.',
         gazeDirection: personOptions.gazeDirection || 'looking at camera',
         faceDirection: personOptions.faceDirection || 'facing camera',
         preserveMainSubjectPose: false, // Not applicable here
@@ -1111,3 +1081,71 @@ Return the response as a single, valid JSON object with the keys "title", "descr
         throw new Error('Could not generate a valid theme from the AI. Please try a different idea.');
     }
 }
+
+// --- FASHION AI / VIRTUAL TRY-ON ---
+
+const dataUrlToPart = (dataUrl: string) => {
+    const arr = dataUrl.split(',');
+    if (arr.length < 2) throw new Error("Invalid data URL");
+    const mimeMatch = arr[0].match(/:(.*?);/);
+    if (!mimeMatch || !mimeMatch[1]) throw new Error("Could not parse MIME type from data URL");
+    return { mimeType: mimeMatch[1], data: arr[1] };
+}
+
+export const generateModelImage = async (userImage: File): Promise<string> => {
+    // Fix: Initialize the Gemini AI client.
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+    const userImagePart = await fileToPart(userImage);
+    const prompt = "You are an expert fashion photographer AI. Transform the person in this image into a full-body fashion model photo suitable for an e-commerce website. The background must be a clean, neutral studio backdrop (light gray, #f0f0f0). The person should have a neutral, professional model expression. Preserve the person's identity, unique features, and body type, but place them in a standard, relaxed standing model pose. The final image must be photorealistic. Return ONLY the final image.";
+    const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash-image-preview',
+        contents: { parts: [userImagePart, { text: prompt }] },
+        config: {
+            safetySettings,
+            responseModalities: [Modality.IMAGE, Modality.TEXT],
+        },
+    });
+    return handleApiResponse(response, "model generation");
+};
+
+export const generateVirtualTryOnImage = async (modelImageUrl: string, garmentImage: File): Promise<string> => {
+    // Fix: Initialize the Gemini AI client.
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+    const modelImagePart = dataUrlToPart(modelImageUrl);
+    const garmentImagePart = await fileToPart(garmentImage);
+    const prompt = `You are an expert virtual try-on AI. You will be given a 'model image' and a 'garment image'. Your task is to create a new photorealistic image where the person from the 'model image' is wearing the clothing from the 'garment image'.
+
+**Crucial Rules:**
+1.  **Complete Garment Replacement:** You MUST completely REMOVE and REPLACE the clothing item worn by the person in the 'model image' with the new garment. No part of the original clothing (e.g., collars, sleeves, patterns) should be visible in the final image.
+2.  **Preserve the Model:** The person's face, hair, body shape, and pose from the 'model image' MUST remain unchanged.
+3.  **Preserve the Background:** The entire background from the 'model image' MUST be preserved perfectly.
+4.  **Apply the Garment:** Realistically fit the new garment onto the person. It should adapt to their pose with natural folds, shadows, and lighting consistent with the original scene.
+5.  **Output:** Return ONLY the final, edited image. Do not include any text.`;
+    const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash-image-preview',
+        // Fix: Corrected the structure of the image part from the data URL.
+        contents: { parts: [{inlineData: modelImagePart}, garmentImagePart, { text: prompt }] },
+        config: {
+            safetySettings,
+            responseModalities: [Modality.IMAGE, Modality.TEXT],
+        },
+    });
+    return handleApiResponse(response, "virtual try-on");
+};
+
+export const generatePoseVariation = async (tryOnImageUrl: string, poseInstruction: string): Promise<string> => {
+    // Fix: Initialize the Gemini AI client.
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+    const tryOnImagePart = dataUrlToPart(tryOnImageUrl);
+    const prompt = `You are an expert fashion photographer AI. Take this image and regenerate it from a different perspective. The person, clothing, and background style must remain identical. The new perspective should be: "${poseInstruction}". Return ONLY the final image.`;
+    const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash-image-preview',
+        // Fix: Corrected the structure of the image part from the data URL.
+        contents: { parts: [{inlineData: tryOnImagePart}, { text: prompt }] },
+        config: {
+            safetySettings,
+            responseModalities: [Modality.IMAGE, Modality.TEXT],
+        },
+    });
+    return handleApiResponse(response, "pose variation");
+};

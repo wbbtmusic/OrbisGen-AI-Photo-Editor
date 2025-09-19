@@ -2,7 +2,7 @@
  * @license
  * SPDX-License-Identifier: Apache-2.0
 */
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Layer } from '../types';
 import { UploadIcon } from './icons';
 
@@ -24,6 +24,21 @@ const LayersPanel: React.FC<LayersPanelProps> = ({
   isLoading,
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const handlePaste = (event: ClipboardEvent) => {
+        if (isLoading) return;
+        const file = event.clipboardData?.files?.[0];
+        if (file && file.type.startsWith('image/')) {
+            event.preventDefault();
+            onAddLayer(file);
+        }
+    };
+    document.addEventListener('paste', handlePaste);
+    return () => {
+        document.removeEventListener('paste', handlePaste);
+    };
+  }, [isLoading, onAddLayer]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

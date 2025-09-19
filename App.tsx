@@ -2,7 +2,7 @@
  * @license
  * SPDX-License-Identifier: Apache-2.0
 */
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { type PixelCrop } from 'react-image-crop';
 import { motion, AnimatePresence } from 'framer-motion';
 import './index.css';
@@ -22,25 +22,29 @@ import {
   generateSwappedFaceImage,
   generateCompositedPersonImage,
   generateMakeupTransferredImage,
-  generateFashionImage,
   generateMakeup,
   expandImage,
   generateStyledImage,
   generateNewCameraAngle,
+  generateModelImage,
+  generateVirtualTryOnImage,
+  generatePoseVariation
 } from './services/geminiService';
 import { saveRecentProject, rotateImage, flipImageHorizontal } from './lib/utils';
-import { type Tool, type HistoryEntry, type AddPersonOptions, type PersonaState, type GeneratedImage, type Theme, type Layer, type CameraAnglesState, type GeneratedAngleImage } from './types';
+import { type Tool, type HistoryEntry, type AddPersonOptions, type AestheticState, type GeneratedImage, type Theme, type Layer, type CameraAnglesState, type GeneratedAngleImage, type OutfitLayer, type WardrobeItem } from './types';
 import EditorCanvas, { type EditorCanvasRef } from './components/EditorCanvas';
 import Toolbar from './components/Toolbar';
 import Header from './components/Header';
 import ToolOptions from './components/ToolOptions';
 import HomeScreen from './components/HomeScreen';
-import PersonaResultsView from './components/PersonaResultsView';
+import AestheticResultsView from './components/PersonaResultsView';
 import ZoomControls from './components/ZoomControls';
 import DesignStudio from './components/DesignStudio';
 import DisclaimerModal from './components/DisclaimerModal';
 import { dataURLtoFile, fileToDataURL } from './lib/utils';
 import { AdjustSlidersIcon } from './components/icons';
+import { defaultWardrobe } from './lib/wardrobe';
+import FashionPoseControls, { POSE_INSTRUCTIONS } from './components/FashionPoseControls';
 
 const loadingMessages = [
   'Painting pixels...',
@@ -51,6 +55,20 @@ const loadingMessages = [
   'Reticulating splines...',
   'Generating brilliance...',
 ];
+
+const initialAddPersonOptions: AddPersonOptions = {
+  prompt: '',
+  personRefImage: null,
+  placement: 'center',
+  familiarity: `Pose the person as a stranger, maintaining a polite and respectful distance. CRITICAL: The main subject's expression and clothing MUST be perfectly preserved.`,
+  gazeDirection: 'looking at camera',
+  faceDirection: 'facing camera',
+  preserveMainSubjectPose: false,
+  style: 'normal',
+  posePrompt: '',
+  lightingMatch: 'match',
+};
+
 
 const App: React.FC = () => {
   const [activeTool, setActiveTool] = useState<Tool>('none');
@@ -74,8 +92,8 @@ const App: React.FC = () => {
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
 
-  // AI Personas State
-  const [personaState, setPersonaState] = useState<PersonaState>({
+  // Aesthetic AI State
+  const [aestheticState, setAestheticState] = useState<AestheticState>({
     status: 'theme-selection',
     selectedTheme: null,
     generationCategories: [],
@@ -89,7 +107,19 @@ const App: React.FC = () => {
   });
   const [generatedAngleImages, setGeneratedAngleImages] = useState<Record<string, GeneratedAngleImage>>({});
 
+  // Tool Options State
+  const [addPersonOptions, setAddPersonOptions] = useState<AddPersonOptions>(initialAddPersonOptions);
   
+  // Fashion AI State
+  const [fashionState, setFashionState] = useState({
+    modelImageUrl: null as string | null,
+    outfitHistory: [] as OutfitLayer[],
+    currentOutfitIndex: 0,
+    currentPoseIndex: 0,
+    wardrobe: defaultWardrobe,
+    status: 'create_model' as 'create_model' | 'dressing_room',
+  });
+
   const currentImageUrl = history[historyIndex]?.imageUrl;
   
   useEffect(() => {
@@ -153,21 +183,24 @@ const App: React.FC = () => {
     setHistoryIndex(newHistory.length);
   };
 
-  const handleFileSelect = async (file: File) => {
+  const handleFileSelect = async (file: File, initialTool?: Tool) => {
     setOriginalImageFile(file);
     try {
         const imageUrl = await fileToDataURL(file);
         setHistory([{ imageUrl }]);
         setHistoryIndex(0);
         setLayers([]);
-        setActiveTool('adjust'); 
+        setActiveTool(initialTool || 'adjust'); 
         setIsToolPanelVisible(true);
         setAppState('editor');
         saveRecentProject(file);
-        setPersonaState({ status: 'theme-selection', selectedTheme: null, generationCategories: [] });
+        // Reset all tool-specific states
+        setAestheticState({ status: 'theme-selection', selectedTheme: null, generationCategories: [] });
         setGeneratedImages({});
         setCameraAnglesState({ status: 'selection', generationPrompts: [] });
         setGeneratedAngleImages({});
+        setAddPersonOptions(initialAddPersonOptions);
+        setFashionState({ modelImageUrl: null, outfitHistory: [], currentOutfitIndex: 0, currentPoseIndex: 0, wardrobe: defaultWardrobe, status: 'create_model' });
     } catch (err) {
         console.error("Error converting file to data URL:", err);
         setError("Could not read the selected file. Please try again.");
@@ -181,10 +214,12 @@ const App: React.FC = () => {
       setLayers([]);
       setActiveTool('none');
       setAppState('home');
-      setPersonaState({ status: 'theme-selection', selectedTheme: null, generationCategories: [] });
+      setAestheticState({ status: 'theme-selection', selectedTheme: null, generationCategories: [] });
       setGeneratedImages({});
       setCameraAnglesState({ status: 'selection', generationPrompts: [] });
       setGeneratedAngleImages({});
+      setAddPersonOptions(initialAddPersonOptions);
+      setFashionState({ modelImageUrl: null, outfitHistory: [], currentOutfitIndex: 0, currentPoseIndex: 0, wardrobe: defaultWardrobe, status: 'create_model' });
       setIsToolPanelVisible(false);
   };
 
@@ -274,6 +309,129 @@ const App: React.FC = () => {
     }
   }, [currentImageUrl]);
 
+  // --- FASHION AI LOGIC ---
+  const handleCreateModel = async () => {
+    if (!originalImageFile) return;
+    setIsLoading(true);
+    setLoadingMessage('Creating your model...');
+    setError(null);
+    try {
+      const generatedUrl = await generateModelImage(originalImageFile);
+      setFashionState(prev => ({
+        ...prev,
+        modelImageUrl: generatedUrl,
+        outfitHistory: [{ garment: null, poseImages: { [POSE_INSTRUCTIONS[0]]: generatedUrl } }],
+        currentOutfitIndex: 0,
+        status: 'dressing_room'
+      }));
+      updateHistory(generatedUrl);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create model');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const handleGarmentSelect = useCallback(async (garmentFile: File, garmentInfo: WardrobeItem) => {
+    if (!currentImageUrl || isLoading) return;
+    
+    const { outfitHistory, currentOutfitIndex, wardrobe } = fashionState;
+    const nextLayer = outfitHistory[currentOutfitIndex + 1];
+    if (nextLayer && nextLayer.garment?.id === garmentInfo.id) {
+        setFashionState(prev => ({ ...prev, currentOutfitIndex: prev.currentOutfitIndex + 1, currentPoseIndex: 0 }));
+        return;
+    }
+
+    setError(null);
+    setIsLoading(true);
+    setLoadingMessage(`Adding ${garmentInfo.name}...`);
+    try {
+      const newImageUrl = await generateVirtualTryOnImage(currentImageUrl, garmentFile);
+      const newLayer: OutfitLayer = { 
+        garment: garmentInfo, 
+        poseImages: { [POSE_INSTRUCTIONS[0]]: newImageUrl } 
+      };
+      updateHistory(newImageUrl);
+      
+      const newOutfitHistory = [...outfitHistory.slice(0, currentOutfitIndex + 1), newLayer];
+      const newWardrobe = !wardrobe.find(item => item.id === garmentInfo.id) ? [...wardrobe, garmentInfo] : wardrobe;
+
+      setFashionState(prev => ({
+        ...prev,
+        outfitHistory: newOutfitHistory,
+        currentOutfitIndex: prev.currentOutfitIndex + 1,
+        currentPoseIndex: 0,
+        wardrobe: newWardrobe
+      }));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to apply garment');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [currentImageUrl, isLoading, fashionState]);
+
+  const handlePoseSelect = useCallback(async (newIndex: number) => {
+    const { outfitHistory, currentOutfitIndex, currentPoseIndex } = fashionState;
+    if (isLoading || outfitHistory.length === 0 || newIndex === currentPoseIndex) return;
+    
+    const poseInstruction = POSE_INSTRUCTIONS[newIndex];
+    const currentLayer = outfitHistory[currentOutfitIndex];
+
+    if (currentLayer.poseImages[poseInstruction]) {
+        setFashionState(prev => ({ ...prev, currentPoseIndex: newIndex }));
+        updateHistory(currentLayer.poseImages[poseInstruction]);
+        return;
+    }
+    
+    const baseImageForPoseChange = Object.values(currentLayer.poseImages)[0];
+    if (!baseImageForPoseChange) return;
+
+    setError(null);
+    setIsLoading(true);
+    setLoadingMessage('Changing pose...');
+    
+    const prevPoseIndex = currentPoseIndex;
+    setFashionState(prev => ({ ...prev, currentPoseIndex: newIndex }));
+    
+    try {
+      const newImageUrl = await generatePoseVariation(baseImageForPoseChange, poseInstruction);
+      setFashionState(prev => {
+        const newHistory = [...prev.outfitHistory];
+        newHistory[prev.currentOutfitIndex].poseImages[poseInstruction] = newImageUrl;
+        return { ...prev, outfitHistory: newHistory };
+      });
+      updateHistory(newImageUrl);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to change pose');
+      setFashionState(prev => ({ ...prev, currentPoseIndex: prevPoseIndex }));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isLoading, fashionState]);
+  
+  const handleRemoveLastGarment = () => {
+    const { currentOutfitIndex, outfitHistory } = fashionState;
+    if (currentOutfitIndex > 0) {
+        const newIndex = currentOutfitIndex - 1;
+        const previousLayer = outfitHistory[newIndex];
+        const lastKnownImage = Object.values(previousLayer.poseImages)[0];
+        
+        setFashionState(prev => ({ ...prev, currentOutfitIndex: newIndex, currentPoseIndex: 0 }));
+        if(lastKnownImage) {
+            updateHistory(lastKnownImage);
+        }
+    }
+  };
+  
+  const handleResetFashion = () => {
+    setFashionState(prev => ({ ...prev, status: 'create_model', outfitHistory: [], currentOutfitIndex: 0, currentPoseIndex: 0 }));
+    if(originalImageFile) {
+        fileToDataURL(originalImageFile).then(url => updateHistory(url));
+    }
+  };
+  // --- END FASHION AI LOGIC ---
+
+
   const handleRotate = (degrees: number) => {
     runCanvasTask(rotateImage, degrees);
   };
@@ -282,12 +440,12 @@ const App: React.FC = () => {
     runCanvasTask(flipImageHorizontal);
   };
 
-  const handleGeneratePersonas = useCallback(async (theme: Theme, categories: string[]) => {
+  const handleGenerateAesthetics = useCallback(async (theme: Theme, categories: string[]) => {
     if (!originalImageFile) return;
     
     setIsToolPanelVisible(false);
     setIsLoading(true);
-    setPersonaState({ status: 'generating', selectedTheme: theme, generationCategories: categories });
+    setAestheticState({ status: 'generating', selectedTheme: theme, generationCategories: categories });
     setGeneratedImages(
       categories.reduce((acc, category) => ({ ...acc, [category]: { status: 'pending' } }), {})
     );
@@ -301,7 +459,7 @@ const App: React.FC = () => {
           [category]: { status: 'done', url: newImageUrl },
         }));
       } catch (err) {
-        console.error(`Error generating persona for category "${category}":`, err);
+        console.error(`Error generating aesthetic for category "${category}":`, err);
         const errorMessage = err instanceof Error ? err.message : 'Generation failed.';
         setGeneratedImages(prev => ({
           ...prev,
@@ -311,7 +469,7 @@ const App: React.FC = () => {
     }));
     
     setIsLoading(false);
-    setPersonaState(prev => ({ ...prev, status: 'results-shown' }));
+    setAestheticState(prev => ({ ...prev, status: 'results-shown' }));
   }, [originalImageFile]);
 
   const handleGenerateCameraAngles = useCallback(async (prompts: { name: string, prompt: string }[]) => {
@@ -355,7 +513,7 @@ const App: React.FC = () => {
       setOriginalImageFile(newFile);
       
       // Reset all generation states
-      setPersonaState({ status: 'theme-selection', selectedTheme: null, generationCategories: [] });
+      setAestheticState({ status: 'theme-selection', selectedTheme: null, generationCategories: [] });
       setGeneratedImages({});
       setCameraAnglesState({ status: 'selection', generationPrompts: [] });
       setGeneratedAngleImages({});
@@ -506,13 +664,13 @@ const App: React.FC = () => {
       return <DesignStudio onExit={handleGoHome} onUseInEditor={handleFileSelect} />;
   }
 
-  const isPersonaResultsVisible = activeTool === 'personas' && 
-    (personaState.status === 'generating' || personaState.status === 'results-shown');
+  const isAestheticResultsVisible = activeTool === 'aestheticAI' && 
+    (aestheticState.status === 'generating' || aestheticState.status === 'results-shown');
   
   const isCameraAnglesResultsVisible = activeTool === 'cameraAngles' &&
     (cameraAnglesState.status === 'generating' || cameraAnglesState.status === 'results-shown');
 
-  const isGenerationViewVisible = isPersonaResultsVisible || isCameraAnglesResultsVisible;
+  const isGenerationViewVisible = isAestheticResultsVisible || isCameraAnglesResultsVisible;
   
   const canUndo = historyIndex > 0;
   const canRedo = historyIndex < history.length - 1;
@@ -532,15 +690,24 @@ const App: React.FC = () => {
     onApplyFaceFusion: (faceRefImage: File) => runGenerativeTask(generateFusedFaceImage, faceRefImage),
     onApplyClothingTransfer: (styleRefImage: File) => runGenerativeTask(generateStyleTransferredImage, styleRefImage),
     onApplyFaceSwap: (faceRefImage: File) => runGenerativeTask(generateSwappedFaceImage, faceRefImage),
-    onApplyAddPerson: (options: AddPersonOptions) => runGenerativeTask(generateCompositedPersonImage, options),
+    onApplyAddPerson: () => runGenerativeTask(generateCompositedPersonImage, addPersonOptions),
+    addPersonOptions: addPersonOptions,
+    onAddPersonOptionsChange: setAddPersonOptions,
     onApplyMakeupTransfer: (makeupRefImage: File) => runGenerativeTask(generateMakeupTransferredImage, makeupRefImage),
-    onApplyFashion: (prompt: string) => runGenerativeTask(generateFashionImage, prompt),
+    fashionState: fashionState,
+    onCreateModel: handleCreateModel,
+    onGarmentSelect: handleGarmentSelect,
+    onRemoveLastGarment: handleRemoveLastGarment,
+    onResetFashion: handleResetFashion,
+    onFinishFashion: () => setActiveTool('adjust'),
     onApplyMakeup: (prompt: string) => runGenerativeTask(generateMakeup, prompt),
     onApplyRandomize: () => runGenerativeTask(expandImage, 'Be creative and completely transform this into a new, surprising image. Change the scene, style, and subject in an unexpected way.'),
-    originalImageFile: originalImageFile, onGeneratePersonas: handleGeneratePersonas, onUsePersonaInEditor: handleUseGeneratedImageInEditor,
-    personaState: personaState, setPersonaState: setPersonaState, generatedImages: generatedImages,
+    originalImageFile: originalImageFile, onGenerateAesthetics: handleGenerateAesthetics, onUseGeneratedImageInEditor: handleUseGeneratedImageInEditor,
+    aestheticState: aestheticState, setAestheticState: setAestheticState, generatedImages: generatedImages,
     layers: layers, onAddLayer: handleAddLayer, onUpdateLayer: handleUpdateLayer, onRemoveLayer: handleRemoveLayer, onFlattenLayers: handleFlattenLayers,
     onGenerateCameraAngles: handleGenerateCameraAngles, cameraAnglesState: cameraAnglesState, setCameraAnglesState: setCameraAnglesState, generatedAngleImages: generatedAngleImages,
+    loadingMessage: loadingMessage,
+    error: error,
   };
 
 
@@ -580,15 +747,15 @@ const App: React.FC = () => {
         <div className="flex-1 flex flex-col relative overflow-hidden bg-zinc-950">
           <div className="flex-1 relative flex items-center justify-center overflow-hidden">
             {isGenerationViewVisible ? (
-              <PersonaResultsView 
-                title={isPersonaResultsVisible ? 'AI Personas' : 'Camera Angles'}
-                subtitle={isPersonaResultsVisible ? personaState.selectedTheme?.title : 'Generated from new perspectives'}
-                generationCategories={isPersonaResultsVisible ? personaState.generationCategories : cameraAnglesState.generationPrompts.map(p => p.name)}
-                generatedImages={isPersonaResultsVisible ? generatedImages : generatedAngleImages}
+              <AestheticResultsView 
+                title={isAestheticResultsVisible ? 'Aesthetic AI' : 'Camera Angles'}
+                subtitle={isAestheticResultsVisible ? aestheticState.selectedTheme?.title : 'Generated from new perspectives'}
+                generationCategories={isAestheticResultsVisible ? aestheticState.generationCategories : cameraAnglesState.generationPrompts.map(p => p.name)}
+                generatedImages={isAestheticResultsVisible ? generatedImages : generatedAngleImages}
                 onUseInEditor={handleUseGeneratedImageInEditor}
                 onBack={() => {
-                  if (isPersonaResultsVisible) {
-                    setPersonaState({ status: 'theme-selection', selectedTheme: null, generationCategories: [] });
+                  if (isAestheticResultsVisible) {
+                    setAestheticState({ status: 'theme-selection', selectedTheme: null, generationCategories: [] });
                     setGeneratedImages({});
                   } else {
                     setCameraAnglesState({ status: 'selection', generationPrompts: [] });
@@ -627,6 +794,24 @@ const App: React.FC = () => {
                       onReset={() => { setZoom(1); setPan({ x: 0, y: 0 }); }}
                     />
                 </motion.div>
+
+                <AnimatePresence>
+                  {activeTool === 'fashion' && fashionState.status === 'dressing_room' && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 10 }}
+                        transition={{ type: 'tween', duration: 0.2 }}
+                        className="absolute bottom-8 left-1/2 -translate-x-[calc(50%+5rem)] z-30"
+                      >
+                        <FashionPoseControls 
+                          currentPoseIndex={fashionState.currentPoseIndex}
+                          onSelectPose={handlePoseSelect}
+                          isLoading={isLoading}
+                        />
+                      </motion.div>
+                  )}
+                </AnimatePresence>
 
                 <motion.div
                   initial={{ opacity: 0, x: 10 }}
