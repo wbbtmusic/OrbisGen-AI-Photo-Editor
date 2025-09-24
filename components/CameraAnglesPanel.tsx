@@ -4,24 +4,105 @@
 */
 import React, { useState } from 'react';
 import AiSuggestions from './AiSuggestions';
+import { motion, AnimatePresence } from 'framer-motion';
+
+interface Preset {
+  name: string;
+  prompt: string;
+}
+
+interface PresetCategory {
+  title: string;
+  presets: Preset[];
+}
+
+const presetCategories: PresetCategory[] = [
+    {
+        title: 'Camera Angles',
+        presets: [
+            { name: 'Low Angle', prompt: 'A dramatic low-angle shot, looking up at the subject from below.' },
+            { name: 'High Angle', prompt: 'A high-angle shot, looking down at the subject from above.' },
+            { name: 'Overhead Shot', prompt: 'An overhead shot (bird\'s eye view), looking directly down from above.' },
+            { name: 'Dutch Angle', prompt: 'A Dutch angle (canted) shot, with the camera tilted to create a sense of unease.' },
+            { name: 'Extreme Close-Up', prompt: 'A dramatic extreme close-up shot, focusing tightly on the subject\'s face.' },
+            { name: 'Full Body Shot', prompt: 'A full body shot from a distance, showing the subject from head to toe within their environment.' },
+            { name: 'Cowboy Shot', prompt: 'A medium-long "cowboy shot," framed from mid-thighs up.' },
+            { name: 'Profile View', prompt: 'A side profile shot of the subject.' },
+        ],
+    },
+    {
+        title: 'Standing Poses',
+        presets: [
+            { name: 'From Behind', prompt: 'A shot from directly behind the subject, looking over their shoulder.' },
+            { name: 'Looking Back', prompt: 'Pose the subject walking away from the camera, but looking back over their shoulder.' },
+            { name: 'Leaning Casually', prompt: 'Change the subject\'s pose to be casually leaning against a surface (imagine one if not present). Preserve their identity and the scene\'s style.' },
+            { name: 'Thinking Pose', prompt: 'Change the subject\'s pose to a thoughtful stance, perhaps with a hand on their chin, looking contemplatively into the distance. Preserve their identity and the scene\'s style.' },
+            { name: 'Candid Laughter', prompt: 'Change the subject\'s expression to candid, genuine laughter, looking slightly away from the camera. Preserve their identity and the scene\'s style.' },
+            { name: 'Hero Pose', prompt: 'Change the subject\'s pose to a confident "hero" stance with hands on hips. Preserve their identity and the scene\'s style.' },
+        ]
+    },
+    {
+        title: 'Sitting Poses',
+        presets: [
+            { name: 'Crouch & Peace', prompt: 'Change the subject\'s pose to a full crouch (squatting), facing the camera and making a peace sign. Preserve the person\'s identity and the scene\'s style.' },
+            { name: 'Sit & Peace', prompt: 'Change the subject\'s pose to sitting on the floor with legs crossed, leaning slightly to one side, and making a peace sign. Preserve the person\'s identity and the scene\'s style.' },
+            { name: 'Relaxed Sit', prompt: 'Change the subject\'s pose to sitting on the floor with one leg extended and the other bent, making a peace sign. Preserve the person\'s identity and the scene\'s style.' },
+            { name: 'Close-up Crouch', prompt: 'A close-up shot of the subject in a crouching pose, smiling and making a peace sign near their face. Preserve the person\'s identity and the scene\'s style.' },
+            { name: 'Sitting on Chair', prompt: 'Change the subject\'s pose to be sitting comfortably on a simple wooden chair, looking towards the camera.' },
+            { name: 'Hugging Knees', prompt: 'Change the subject\'s pose to be sitting on the floor, hugging their knees to their chest, with a thoughtful or cozy expression.' },
+            { name: 'Cat Pose Sit', prompt: 'Change the subject\'s pose to be sitting on the floor in a playful "cat pose," with knees bent and hands on the floor like paws, looking at the camera.' },
+            { name: 'Lounging on Floor', prompt: 'Change the subject\'s pose to be lounging casually on their side on the floor, propped up by one elbow.' },
+            { name: 'Thinking on Steps', prompt: 'Change the subject\'s pose to be sitting on steps, leaning forward with their chin resting on their hands in a thoughtful expression.' },
+            { name: 'Reading a Book', prompt: 'Change the subject\'s pose to be sitting down comfortably, engrossed in reading a book.' },
+        ]
+    },
+    {
+        title: 'Cat Poses',
+        presets: [
+            { name: 'Standing (Side)', prompt: 'Change the subject\'s pose to be standing on all fours like a cat, viewed from the side. Preserve the person\'s identity and the scene\'s style.' },
+            { name: 'Standing (Front)', prompt: 'Change the subject\'s pose to be standing on all fours like a cat, facing the camera. Preserve the person\'s identity and the scene\'s style.' },
+            { name: 'Walking on all fours', prompt: 'Change the subject\'s pose to be walking on all fours like a cat, captured mid-stride. Preserve the person\'s identity and the scene\'s style.' },
+            { name: 'Big Stretch', prompt: 'Change the subject\'s pose to a "big stretch" like a cat, with their front arms extended forward and back arched. Preserve the person\'s identity and the scene\'s style.' },
+            { name: 'Innocent Stretch', prompt: 'Transform the subject into the absolute pinnacle of cuteness by posing them in the most heart-meltingly innocent kitten stretch imaginable. Their front paws must be stretched far, far forward, flat on the ground, as if pleading for a gentle pat. Their little rear end should be playfully and steeply angled up towards the sky, with their tail curled in a soft, inquisitive question mark. Their head should be very low to the ground, almost touching it, while they peer forward with enormous, wide, sparkling eyes full of pure innocence and gentle curiosity. The entire pose should scream "I am just a tiny, harmless, adorable creature." CRITICAL: The person\'s identity must be perfectly preserved, just adapted into this impossibly cute pose. The scene\'s style must also be preserved.' },
+            { name: 'Cat Sit (Side)', prompt: 'Change the subject\'s pose to a \'cat sit\' position as seen from the side. They should be sitting on the floor with their knees bent and feet tucked under, with a straight back. Preserve the person\'s identity and the scene\'s style.' },
+            { name: 'Cat Sit (Front)', prompt: 'Change the subject\'s pose to a classic \'cat sit\' position as seen from the front. They should be sitting upright on the floor with their knees bent and together. Preserve the person\'s identity and the scene\'s style.' },
+            { name: 'Cat Loaf', prompt: 'Change the subject\'s pose to the \'cat loaf\' position. They should be sitting with all limbs tucked underneath their body, resembling a loaf of bread. Preserve the person\'s identity and the scene\'s style.' },
+            { name: 'Crouch & Pounce', prompt: 'Change the subject\'s pose to a low crouch, as if about to pounce, in a playful cat-like manner. Preserve the person\'s identity and the scene\'s style.' },
+            { name: 'Curled Up Sleep', prompt: 'Change the subject\'s pose to be curled up on the floor as if sleeping like a cat, with their head tucked in. Preserve the person\'s identity and the scene\'s style.' },
+            { name: 'Playful Paw', prompt: 'Change the subject\'s pose to be sitting on the floor and playfully reaching out one hand as if batting at something, like a cat. Preserve the person\'s identity and the scene\'s style.' },
+            { name: 'Sunbathing Stretch', prompt: 'Change the subject\'s pose to be lying stretched out on the floor, as if sunbathing like a cat. Preserve the person\'s identity and the scene\'s style.' },
+            { name: 'Box Sit', prompt: 'Change the subject\'s pose to be sitting inside an invisible box on the floor, perfectly fitting within its imaginary confines, just like a cat would. Preserve the person\'s identity and the scene\'s style.' },
+        ]
+    },
+     {
+        title: 'Action Poses',
+        presets: [
+            { name: 'Jumping', prompt: 'Change the subject\'s pose to be jumping joyfully in the air. Preserve their identity and the scene\'s style.' },
+            { name: 'Walking', prompt: 'Capture the subject in a natural walking motion, mid-stride. Preserve their identity and the scene\'s style.' },
+            { name: 'Running', prompt: 'Capture the subject in a dynamic running pose. Preserve their identity and the scene\'s style.' },
+            { name: 'Dancing', prompt: 'Change the subject\'s pose to a graceful or energetic dancing motion. Preserve their identity and the scene\'s style.' },
+        ]
+    },
+    {
+        title: 'Artistik',
+        presets: [
+            { name: 'Shy Peek', prompt: 'Change the subject\'s pose to kneeling on a soft surface, partially covering their face with one hand in a shy or playful \'peek-a-boo\' gesture. Preserve the person\'s identity and the scene\'s style.' },
+            { name: 'Playful Agent', prompt: 'Change the subject\'s pose to sitting playfully on the edge of a surface, turning towards the camera with a confident expression and making a \'finger gun\' gesture. Preserve the person\'s identity and the scene\'s style.' },
+            { name: 'Lounging Gaze', prompt: 'Change the subject\'s pose to lounging casually on their side on a sofa or floor, propped up by one elbow, looking directly at the camera with a relaxed expression. Preserve their identity and the scene\'s style.' },
+            { name: 'Over the Shoulder', prompt: 'Pose the subject looking back over their shoulder at the camera with a soft, inviting expression. Preserve their identity and the scene\'s style.' },
+            { name: 'Sitting Pretty', prompt: 'Change the subject\'s pose to sitting on the floor with knees drawn up together, wrapping their arms around their legs. Preserve the person\'s identity and the scene\'s style.' },
+            { name: 'Delicate Touch', prompt: 'A close-up shot focusing on the subject\'s face, with their hand gently touching their own cheek or lip in a delicate, thoughtful manner. Preserve their identity.' },
+            { name: 'Graceful Arch', prompt: 'Change the subject\'s pose to a graceful back arch while standing or sitting, creating an elegant and artistic silhouette. Preserve the person\'s identity and the scene\'s style.' },
+            { name: 'Playful Pout', prompt: 'A close-up shot of the subject with a playful, slightly pouty expression, looking directly at the camera. Preserve their identity.' },
+        ]
+    }
+];
+
 
 interface CameraAnglesPanelProps {
   onGenerate: (prompts: { name: string, prompt: string }[]) => void;
   isLoading: boolean;
 }
-
-const anglePresets = [
-    { name: 'Low Angle', prompt: 'A dramatic low-angle shot, looking up at the subject from below.' },
-    { name: 'High Angle', prompt: 'A high-angle shot, looking down at the subject from above.' },
-    { name: 'Dutch Angle', prompt: 'A Dutch angle (canted) shot, with the camera tilted to create a sense of unease.' },
-    { name: 'Profile View', prompt: 'A side profile shot of the subject.' },
-    { name: 'From Behind', prompt: 'A shot from directly behind the subject, looking over their shoulder.' },
-    { name: 'Overhead Shot', prompt: 'An overhead shot (bird\'s eye view), looking directly down from above.' },
-    { name: 'Crouch & Peace', prompt: 'Change the subject\'s pose to a full crouch (squatting), facing the camera and making a peace sign. Preserve the person\'s identity and the scene\'s style.' },
-    { name: 'Sit & Peace', prompt: 'Change the subject\'s pose to sitting on the floor with legs crossed, leaning slightly to one side, and making a peace sign. Preserve the person\'s identity and the scene\'s style.' },
-    { name: 'Relaxed Sit', prompt: 'Change the subject\'s pose to sitting on the floor with one leg extended and the other bent, making a peace sign. Preserve the person\'s identity and the scene\'s style.' },
-    { name: 'Close-up Crouch', prompt: 'A close-up shot of the subject in a crouching pose, smiling and making a peace sign near their face. Preserve the person\'s identity and the scene\'s style.' },
-];
 
 const lensPresets = {
   'Normal (50mm)': '', // Default, no modification
@@ -34,6 +115,7 @@ const CameraAnglesPanel: React.FC<CameraAnglesPanelProps> = ({ onGenerate, isLoa
     const [selectedAngles, setSelectedAngles] = useState<string[]>([]);
     const [customPrompt, setCustomPrompt] = useState('');
     const [lens, setLens] = useState<keyof typeof lensPresets>('Normal (50mm)');
+    const [customImageCount, setCustomImageCount] = useState(1);
 
     const toggleAngle = (name: string) => {
         setSelectedAngles(prev => 
@@ -41,19 +123,37 @@ const CameraAnglesPanel: React.FC<CameraAnglesPanelProps> = ({ onGenerate, isLoa
         );
     };
 
+    const handleSelectCategory = (categoryPresets: Preset[]) => {
+        const categoryNames = categoryPresets.map(p => p.name);
+        setSelectedAngles(prev => {
+            const newSelection = new Set([...prev, ...categoryNames]);
+            return Array.from(newSelection);
+        });
+    };
+
     const handleGenerate = () => {
         const lensSuffix = lensPresets[lens];
         const promptsToGenerate: { name: string, prompt: string }[] = [];
+        const allPresets = presetCategories.flatMap(c => c.presets);
         
         selectedAngles.forEach(name => {
-            const preset = anglePresets.find(p => p.name === name);
+            const preset = allPresets.find(p => p.name === name);
             if (preset) {
                 promptsToGenerate.push({ name: preset.name, prompt: preset.prompt + lensSuffix });
             }
         });
 
         if (customPrompt.trim()) {
-            promptsToGenerate.push({ name: 'Custom Angle', prompt: customPrompt.trim() + lensSuffix });
+            if (customImageCount === 1) {
+                promptsToGenerate.push({ name: 'Custom Angle', prompt: customPrompt.trim() + lensSuffix });
+            } else {
+                 for (let i = 1; i <= customImageCount; i++) {
+                    promptsToGenerate.push({ 
+                        name: `Custom Angle ${i}`, 
+                        prompt: customPrompt.trim() + lensSuffix 
+                    });
+                }
+            }
         }
 
         if (promptsToGenerate.length > 0) {
@@ -66,7 +166,8 @@ const CameraAnglesPanel: React.FC<CameraAnglesPanelProps> = ({ onGenerate, isLoa
         onGenerate([{ name: 'AI Suggestion', prompt: prompt + lensSuffix }]);
     };
 
-    const canGenerate = !isLoading && (selectedAngles.length > 0 || customPrompt.trim());
+    const totalImages = selectedAngles.length + (customPrompt.trim() ? customImageCount : 0);
+    const canGenerate = !isLoading && totalImages > 0;
 
     return (
         <div className="w-full flex flex-col gap-4 animate-fade-in">
@@ -80,7 +181,7 @@ const CameraAnglesPanel: React.FC<CameraAnglesPanelProps> = ({ onGenerate, isLoa
                             key={lensName}
                             onClick={() => setLens(lensName)}
                             disabled={isLoading}
-                            className={`w-full text-center font-semibold py-2 px-2 rounded-lg transition-colors duration-200 ease-in-out hover:bg-zinc-700 active:scale-95 text-xs disabled:opacity-50 disabled:cursor-not-allowed ${lens === lensName ? 'bg-zinc-200 text-black' : 'bg-zinc-800 text-zinc-200'}`}
+                            className={`w-full text-center font-semibold py-2 px-2 rounded-lg transition-colors duration-2.25 ease-in-out hover:bg-zinc-700 active:scale-95 text-xs disabled:opacity-50 disabled:cursor-not-allowed ${lens === lensName ? 'bg-zinc-200 text-black' : 'bg-zinc-800 text-zinc-200'}`}
                         >
                             {lensName}
                         </button>
@@ -88,20 +189,34 @@ const CameraAnglesPanel: React.FC<CameraAnglesPanelProps> = ({ onGenerate, isLoa
                 </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
-                {anglePresets.map(preset => (
-                    <button
-                        key={preset.name}
-                        onClick={() => toggleAngle(preset.name)}
-                        disabled={isLoading}
-                        className={`w-full text-center font-semibold py-3 px-2 rounded-lg transition-colors duration-200 ease-in-out hover:bg-zinc-700 active:scale-95 text-xs disabled:opacity-50 disabled:cursor-not-allowed ${selectedAngles.includes(preset.name) ? 'bg-zinc-200 text-black' : 'bg-zinc-800 text-zinc-200'}`}
-                    >
-                        {preset.name}
-                    </button>
-                ))}
-            </div>
+            {presetCategories.map(category => (
+                <div key={category.title} className="flex flex-col gap-2">
+                    <div className="flex items-center justify-between border-b border-zinc-800 pb-1 mb-1">
+                        <h3 className="text-sm font-semibold text-zinc-300">{category.title}</h3>
+                        <button 
+                            onClick={() => handleSelectCategory(category.presets)}
+                            disabled={isLoading}
+                            className="text-xs font-medium text-blue-400 hover:text-blue-300 disabled:opacity-50"
+                        >
+                            Select All
+                        </button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                        {category.presets.map(preset => (
+                            <button
+                                key={preset.name}
+                                onClick={() => toggleAngle(preset.name)}
+                                disabled={isLoading}
+                                className={`w-full text-center font-semibold py-3 px-2 rounded-lg transition-colors duration-2.25 ease-in-out hover:bg-zinc-700 active:scale-95 text-xs disabled:opacity-50 disabled:cursor-not-allowed ${selectedAngles.includes(preset.name) ? 'bg-zinc-200 text-black' : 'bg-zinc-800 text-zinc-200'}`}
+                            >
+                                {preset.name}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            ))}
 
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2 border-t border-zinc-800 pt-3 mt-1">
                 <label htmlFor="custom-angle-prompt" className="text-xs font-medium text-zinc-400">
                     Or describe a custom angle/pose (optional)
                 </label>
@@ -115,13 +230,39 @@ const CameraAnglesPanel: React.FC<CameraAnglesPanelProps> = ({ onGenerate, isLoa
                     disabled={isLoading}
                 />
             </div>
+            
+            <AnimatePresence>
+                {customPrompt.trim() && (
+                    <motion.div 
+                        initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                        animate={{ opacity: 1, height: 'auto', marginTop: '0.5rem' }}
+                        exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                        transition={{ duration: 0.2, ease: 'easeInOut' }}
+                        className="flex flex-col gap-2 overflow-hidden"
+                    >
+                        <label className="text-xs font-medium text-zinc-400">
+                            Number of variations: <span className="font-bold text-white">{customImageCount}</span>
+                        </label>
+                        <input
+                            type="range"
+                            min="1"
+                            max="10"
+                            step="1"
+                            value={customImageCount}
+                            onChange={(e) => setCustomImageCount(parseInt(e.target.value))}
+                            className="w-full h-2 bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                            disabled={isLoading}
+                        />
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             <button
                 onClick={handleGenerate}
                 disabled={!canGenerate}
-                className="w-full bg-blue-600 text-white font-semibold py-2 px-4 text-sm rounded-xl transition-all shadow-md shadow-blue-600/20 hover:bg-blue-500 hover:shadow-lg hover:shadow-blue-500/40 active:bg-blue-700 disabled:bg-zinc-800 disabled:text-zinc-500 disabled:cursor-not-allowed"
+                className="w-full mt-2 bg-blue-600 text-white font-semibold py-2 px-4 text-sm rounded-xl transition-all shadow-md shadow-blue-600/20 hover:bg-blue-500 hover:shadow-lg hover:shadow-blue-500/40 active:bg-blue-700 disabled:bg-zinc-800 disabled:text-zinc-500 disabled:cursor-not-allowed"
             >
-                {`Generate ${selectedAngles.length + (customPrompt.trim() ? 1 : 0)} Image(s)`}
+                {`Generate ${totalImages} Image(s)`}
             </button>
 
             <hr className="border-zinc-800 my-1" />

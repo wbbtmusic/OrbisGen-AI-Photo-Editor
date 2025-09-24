@@ -10,7 +10,7 @@ import { type AspectRatio, type DesignStudioPersonaOptions, type AddPersonOption
 import AddPersonControls from './AddPersonControls';
 import { 
     AspectRatio1x1Icon, AspectRatio16x9Icon, AspectRatio9x16Icon, AspectRatio4x3Icon, AspectRatio3x4Icon,
-    UndoIcon, RedoIcon,
+    UndoIcon, RedoIcon, DownloadIcon,
 } from './icons';
 
 interface DesignStudioProps {
@@ -143,6 +143,18 @@ const DesignStudio: React.FC<DesignStudioProps> = ({ onExit, onUseInEditor }) =>
         }
     };
 
+    const handleDownload = () => {
+        const urlToDownload = generatedImageUrl || generatedBackgroundUrl;
+        if (urlToDownload) {
+            const link = document.createElement('a');
+            link.href = urlToDownload;
+            link.download = `orbisgen-design-${Date.now()}.jpg`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    };
+
 
     const handleInspireMe = () => {
         const randomPrompt = inspirationPrompts[Math.floor(Math.random() * inspirationPrompts.length)];
@@ -234,14 +246,23 @@ const DesignStudio: React.FC<DesignStudioProps> = ({ onExit, onUseInEditor }) =>
                 </div>
             );
         }
-        const finalImage = generatedImageUrl;
-        const backgroundImage = generatedBackgroundUrl;
+        
+        const imageToDisplay = generatedImageUrl || generatedBackgroundUrl;
 
-        if (finalImage) {
-            return <img src={finalImage} alt="Final generated" className="max-w-full max-h-full object-contain rounded-md animate-fade-in" />;
-        }
-        if (backgroundImage) {
-            return <img src={backgroundImage} alt="Generated background" className="max-w-full max-h-full object-contain rounded-md animate-fade-in" />;
+        if (imageToDisplay) {
+            return (
+                <div className="relative w-full h-full flex items-center justify-center">
+                    <img src={imageToDisplay} alt="Generated content" className="max-w-full max-h-full object-contain rounded-md animate-fade-in" />
+                    <button
+                        onClick={handleDownload}
+                        className="absolute top-4 right-4 z-10 p-2.5 bg-black/60 backdrop-blur-sm rounded-lg text-zinc-200 hover:bg-zinc-700 hover:text-white transition-colors shadow-lg"
+                        aria-label="Download Image"
+                        title="Download Image"
+                    >
+                        <DownloadIcon className="w-6 h-6" />
+                    </button>
+                </div>
+            );
         }
         return <div className="text-center text-zinc-600"><p>Your generated image will appear here.</p></div>;
     };

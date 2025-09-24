@@ -104,8 +104,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onFileSelect, onGoToDesignStudi
     document.getElementById('file-upload-homescreen')?.click();
   };
 
-  const handleTryFashionAI = () => {
-    setInitialTool('fashion');
+  const handleTryAddPerson = () => {
+    setInitialTool('addPerson');
     document.getElementById('file-upload-homescreen')?.click();
   };
 
@@ -146,15 +146,15 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onFileSelect, onGoToDesignStudi
                     </div>
                 </div>
 
-                {/* Fashion AI Promo */}
+                {/* Featured Tool: Add Person Promo */}
                 <div className="flex-1">
-                    <div className="group h-full relative rounded-xl p-6 bg-gradient-to-br from-blue-600 to-purple-700 text-white shadow-2xl shadow-blue-500/30 transition-all duration-300 hover:shadow-purple-500/50 flex flex-col justify-center">
-                        <h2 className="text-2xl font-bold mb-2">Major Update: Fashion AI</h2>
-                        <p className="text-sm text-blue-100 mb-4">
-                            Bring your style to life! Create a personal model and try on outfits with our new Virtual Try-On tool.
+                    <div className="group h-full relative rounded-xl p-6 bg-gradient-to-br from-teal-500 to-green-600 text-white shadow-2xl shadow-teal-500/30 transition-all duration-300 hover:shadow-green-500/50 flex flex-col justify-center">
+                        <h2 className="text-2xl font-bold mb-2">Featured Tool: Add Person</h2>
+                        <p className="text-sm text-teal-100 mb-4">
+                           Seamlessly add anyone to your photos. Describe them with text or use a reference image for a perfect match.
                         </p>
                         <button
-                            onClick={handleTryFashionAI}
+                            onClick={handleTryAddPerson}
                             className="bg-white text-black font-semibold py-2 px-5 rounded-lg transition-all hover:bg-zinc-200 active:scale-95 group-hover:scale-105 self-start"
                         >
                             Try Now

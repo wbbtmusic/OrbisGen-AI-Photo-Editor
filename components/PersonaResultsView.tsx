@@ -4,7 +4,8 @@
 */
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { type GeneratedImage, type ImageGenerationStatus } from '../types';
+// Fix: Import GeneratedAngleImage and use a union type for the generatedImages prop.
+import { type GeneratedImage, type GeneratedAngleImage, type ImageGenerationStatus } from '../types';
 import { createAlbumPage } from '../lib/albumUtils';
 import { DownloadIcon, TextGenIcon, SparklesIcon } from './icons';
 
@@ -12,7 +13,7 @@ interface AestheticResultsViewProps {
     title: string;
     subtitle?: string | null;
     generationCategories: string[];
-    generatedImages: Record<string, GeneratedImage>;
+    generatedImages: Record<string, GeneratedImage | GeneratedAngleImage>;
     onUseInEditor: (imageUrl: string) => void;
     onBack: () => void;
     isGenerating: boolean;
@@ -236,7 +237,7 @@ const AestheticResultsView: React.FC<AestheticResultsViewProps> = ({
                             exit={{ scale: 0.9, opacity: 0 }}
                             transition={{ duration: 0.2 }}
                             onClick={(e) => e.stopPropagation()}
-                            className="relative bg-zinc-900 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col"
+                            className="relative bg-zinc-900 rounded-lg shadow-xl flex flex-col"
                         >
                             <button
                                 onClick={() => setEnlargedImage(null)}
@@ -246,8 +247,8 @@ const AestheticResultsView: React.FC<AestheticResultsViewProps> = ({
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                             </button>
 
-                            <div className="flex-1 p-4 min-h-0">
-                                <img src={enlargedImage.url} alt={enlargedImage.caption} className="w-full h-full object-contain" />
+                            <div className="p-4">
+                                <img src={enlargedImage.url} alt={enlargedImage.caption} className="block rounded-md object-contain max-w-[85vw] max-h-[75vh]" />
                             </div>
                             
                             <div className="flex-shrink-0 p-4 border-t border-zinc-800 bg-black/20 rounded-b-lg flex items-center justify-between gap-4">

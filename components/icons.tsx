@@ -177,6 +177,11 @@ export const RandomizeIcon: React.FC<{ className?: string }> = ({ className }) =
         <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 21v-5.25L13.5 3" />
     </Icon>
 );
+export const ExpandIcon: React.FC<{ className?: string }> = ({ className }) => (
+    <Icon className={className}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75v4.5m0-4.5h-4.5m4.5 0L15 9m5.25 11.25v-4.5m0 4.5h-4.5m4.5 0L15 15" />
+    </Icon>
+);
 
 // --- UI ICONS ---
 export const HomeIcon: React.FC<{ className?: string }> = ({ className }) => (

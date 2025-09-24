@@ -16,7 +16,7 @@ export type Tool =
   | 'textGen'
   | 'sky'
   | 'insert'
-  | 'expand'
+  | 'generativeExpand'
   | 'colorGrade'
   | 'faceFusion'
   | 'clothingTransfer'

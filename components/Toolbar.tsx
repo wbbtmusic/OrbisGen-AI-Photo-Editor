@@ -14,7 +14,7 @@ import {
     SkyIcon, InsertIcon, AddPersonIcon, TextGenIcon, CameraAnglesIcon, 
     PortraitIcon, FashionIcon, MakeupIcon, MakeupTransferIcon, 
     StyleTransferIcon, FaceSwapIcon, FaceFusionIcon, PaletteIcon, 
-    ColorGradeIcon, StudioIcon, RandomizeIcon
+    ColorGradeIcon, StudioIcon, RandomizeIcon, ExpandIcon
 } from './icons';
 
 export interface ToolDefinition {
@@ -46,6 +46,7 @@ export const toolCategories: ToolCategory[] = [
     icon: EssentialsCategoryIcon,
     tools: [
       { name: 'crop', icon: CropIcon, label: 'Crop & Resize' },
+      { name: 'generativeExpand', icon: ExpandIcon, label: 'Expand Canvas' },
       { name: 'adjust', icon: AdjustSlidersIcon, label: 'Adjustments' },
       { name: 'layers', icon: LayersIcon, label: 'Layers' },
     ],

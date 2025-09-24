@@ -818,7 +818,7 @@ export const generateMakeup = async (
 };
 
 /**
- * Expands the image canvas with generative content.
+ * Expands the image canvas with generative content for the Randomize tool.
  * @param originalImage The original image file.
  * @param prompt A creative prompt for the expansion.
  * @returns A promise that resolves to the data URL of the expanded image.
@@ -852,6 +852,46 @@ export const expandImage = async (
     });
     
     return handleApiResponse(response, 'image expansion');
+};
+
+/**
+ * Expands the image canvas by filling in transparent areas (outpainting).
+ * @param paddedImage An image file with transparent padding around the original content.
+ * @param prompt A text prompt to guide the fill process.
+ * @returns A promise that resolves to the data URL of the expanded image.
+ */
+export const generativeExpand = async (
+    paddedImage: File,
+    prompt: string
+): Promise<string> => {
+    console.log(`Generatively expanding image with prompt: ${prompt}`);
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+    
+    const imagePart = await fileToPart(paddedImage);
+    const textPart = { text: `You are an expert AI photo editor with the ability to "outpaint" or generatively fill transparent areas of an image. The user has provided an image with transparent padding around it.
+
+Your task is to fill ONLY the transparent areas, seamlessly extending the content of the original image.
+
+User Guidance: "${prompt || 'Extend the image naturally in all directions, matching the existing content.'}"
+
+CRITICAL RULES:
+1.  **PRESERVE THE ORIGINAL:** The non-transparent part of the image MUST remain completely unchanged and perfectly preserved.
+2.  **FILL TRANSPARENCY ONLY:** Your generation must be confined to the transparent pixels.
+3.  **SEAMLESS BLENDING:** The generated content must perfectly match the style, lighting, color, textures, and perspective of the original image to create a seamless, photorealistic result.
+4.  **MAINTAIN DIMENSIONS:** The final image must have the exact same dimensions as the input image (including the transparent padding).
+
+Output: Return ONLY the final, filled image. Do not return text.` };
+
+    const response: GenerateContentResponse = await ai.models.generateContent({
+        model: 'gemini-2.5-flash-image-preview',
+        contents: { parts: [imagePart, textPart] },
+        config: {
+          safetySettings,
+          responseModalities: [Modality.IMAGE, Modality.TEXT],
+        },
+    });
+    
+    return handleApiResponse(response, 'generative expand');
 };
 
 /**

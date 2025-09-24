@@ -44,7 +44,8 @@ export const toolDisplayName: Record<Tool, string> = {
   textGen: 'Generative Text',
   sky: 'Replace Sky',
   insert: 'Insert Object',
-  expand: 'Expand',
+  // Fix: Replaced 'expand' with 'generativeExpand' and updated the display name to match the Tool type.
+  generativeExpand: 'Expand Canvas',
   colorGrade: 'Color Grade',
   faceFusion: 'Face Fusion',
   clothingTransfer: 'Clothing Transfer',

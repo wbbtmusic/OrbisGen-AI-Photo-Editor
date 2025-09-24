@@ -28,7 +28,8 @@ import {
   generateNewCameraAngle,
   generateModelImage,
   generateVirtualTryOnImage,
-  generatePoseVariation
+  generatePoseVariation,
+  generativeExpand
 } from './services/geminiService';
 import { saveRecentProject, rotateImage, flipImageHorizontal } from './lib/utils';
 import { type Tool, type HistoryEntry, type AddPersonOptions, type AestheticState, type GeneratedImage, type Theme, type Layer, type CameraAnglesState, type GeneratedAngleImage, type OutfitLayer, type WardrobeItem } from './types';
@@ -326,7 +327,9 @@ const App: React.FC = () => {
       }));
       updateHistory(generatedUrl);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create model');
+      // Fix: assign error message to a variable to help type inference.
+      const errorMessage = err instanceof Error ? err.message : 'Failed to create model';
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -364,7 +367,9 @@ const App: React.FC = () => {
         wardrobe: newWardrobe
       }));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to apply garment');
+      // Fix: assign error message to a variable to help type inference.
+      const errorMessage = err instanceof Error ? err.message : 'Failed to apply garment';
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -402,7 +407,9 @@ const App: React.FC = () => {
       });
       updateHistory(newImageUrl);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to change pose');
+      // Fix: assign error message to a variable to help type inference.
+      const errorMessage = err instanceof Error ? err.message : 'Failed to change pose';
+      setError(errorMessage);
       setFashionState(prev => ({ ...prev, currentPoseIndex: prevPoseIndex }));
     } finally {
       setIsLoading(false);
@@ -545,6 +552,68 @@ const App: React.FC = () => {
     const args = ['retouch', 'portrait', 'textGen', 'insert'].includes(activeTool) ? [prompt, selection] : [prompt];
     runGenerativeTask(generator as any, ...args);
   };
+
+  const handleApplyExpand = useCallback(async (aspectRatio: number, prompt: string) => {
+    if (!currentImageUrl) return;
+
+    setIsToolPanelVisible(false);
+    setIsLoading(true);
+    setError(null);
+
+    try {
+        const createPaddedImage = (imageUrl: string, targetAspect: number): Promise<File> => {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    if (!ctx) return reject(new Error('Could not get canvas context'));
+
+                    const currentAspect = img.naturalWidth / img.naturalHeight;
+                    let newWidth = img.naturalWidth;
+                    let newHeight = img.naturalHeight;
+                    let dx = 0;
+                    let dy = 0;
+
+                    if (targetAspect > currentAspect) {
+                        newWidth = Math.round(img.naturalHeight * targetAspect);
+                        dx = Math.round((newWidth - img.naturalWidth) / 2);
+                    } else if (targetAspect < currentAspect) {
+                        newHeight = Math.round(img.naturalWidth / targetAspect);
+                        dy = Math.round((newHeight - img.naturalHeight) / 2);
+                    } else {
+                        resolve(dataURLtoFile(imageUrl, 'original.png'));
+                        return;
+                    }
+
+                    canvas.width = newWidth;
+                    canvas.height = newHeight;
+                    ctx.drawImage(img, dx, dy);
+                    const dataUrl = canvas.toDataURL('image/png');
+                    const file = dataURLtoFile(dataUrl, 'padded-image.png');
+                    resolve(file);
+                };
+                img.onerror = (err) => reject(err);
+                img.src = imageUrl;
+            });
+        };
+
+        const paddedImageFile = await createPaddedImage(currentImageUrl, aspectRatio);
+        const newImageUrl = await generativeExpand(paddedImageFile, prompt); 
+        
+        updateHistory(newImageUrl);
+        const expandedFile = dataURLtoFile(newImageUrl, originalImageFile?.name || 'expanded.png');
+        setOriginalImageFile(expandedFile);
+
+    } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
+        setError(errorMessage);
+    } finally {
+        setIsLoading(false);
+    }
+}, [currentImageUrl, originalImageFile?.name]);
+
 
   // Layer Management
     const handleAddLayer = async (file: File) => {
@@ -706,6 +775,7 @@ const App: React.FC = () => {
     aestheticState: aestheticState, setAestheticState: setAestheticState, generatedImages: generatedImages,
     layers: layers, onAddLayer: handleAddLayer, onUpdateLayer: handleUpdateLayer, onRemoveLayer: handleRemoveLayer, onFlattenLayers: handleFlattenLayers,
     onGenerateCameraAngles: handleGenerateCameraAngles, cameraAnglesState: cameraAnglesState, setCameraAnglesState: setCameraAnglesState, generatedAngleImages: generatedAngleImages,
+    onApplyExpand: handleApplyExpand,
     loadingMessage: loadingMessage,
     error: error,
   };

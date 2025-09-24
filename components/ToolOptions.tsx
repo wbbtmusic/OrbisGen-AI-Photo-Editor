@@ -30,6 +30,7 @@ import RandomizePanel from './RandomizePanel';
 import AestheticPanel from './PersonaPanel';
 import LayersPanel from './LayersPanel';
 import CameraAnglesPanel from './CameraAnglesPanel';
+import ExpandPanel from './ExpandPanel';
 
 
 export const toolDisplayName: Record<Tool, string> = {
@@ -43,7 +44,7 @@ export const toolDisplayName: Record<Tool, string> = {
   textGen: 'Generative Text',
   sky: 'Replace Sky',
   insert: 'Insert Object',
-  expand: 'Expand',
+  generativeExpand: 'Expand Canvas',
   colorGrade: 'Color Grade',
   faceFusion: 'Face Fusion',
   clothingTransfer: 'Clothing Transfer',
@@ -112,6 +113,7 @@ export interface ToolOptionsProps {
 
     onApplyMakeup: (prompt: string) => void;
     onApplyRandomize: () => void;
+    onApplyExpand: (aspectRatio: number, prompt: string) => void;
     originalImageFile: File | null;
     onGenerateAesthetics: (theme: Theme, categories:string[]) => void;
     onUseGeneratedImageInEditor: (imageUrl: string) => void;
@@ -155,6 +157,8 @@ const ToolOptions: React.FC<ToolOptionsProps> = (props) => {
           return <SkyPanel onApply={props.onApplySky} isLoading={isLoading} />;
         case 'insert':
           return <InsertPanel onApply={props.onApplyInsert} isLoading={isLoading} hasSelection={hasSelection} />;
+        case 'generativeExpand':
+          return <ExpandPanel onApplyExpand={props.onApplyExpand} isLoading={isLoading} />;
         case 'colorGrade':
           return <ColorGradePanel onApplyColorGrade={props.onApplyColorGrade} isLoading={isLoading} />;
         case 'faceFusion':
