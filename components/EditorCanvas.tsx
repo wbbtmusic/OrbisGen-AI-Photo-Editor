@@ -172,7 +172,7 @@ const EditorCanvas = forwardRef<EditorCanvasRef, EditorCanvasProps>(({
         };
     }, [pan, zoom, setPan, setZoom]);
 
-    const isSelectionToolActive = ['crop', 'retouch', 'portrait', 'textGen', 'insert'].includes(activeTool);
+    const isSelectionToolActive = ['crop', 'retouch', 'portrait', 'textGen', 'insert', 'projector'].includes(activeTool);
 
     const getCursor = () => {
         if (isSelectionToolActive) return 'crosshair';

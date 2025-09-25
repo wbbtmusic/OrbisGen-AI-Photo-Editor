@@ -59,6 +59,10 @@ export const toolDisplayName: Record<Tool, string> = {
   aestheticAI: 'Aesthetic AI',
   cameraAngles: 'Camera Angles',
   layers: 'Layers',
+  // FIX: Added missing 'timeTraveler' property to satisfy the `Record<Tool, string>` type.
+  timeTraveler: 'Time Traveler',
+  // Fix: Add missing 'projector' property to satisfy the Record<Tool, string> type.
+  projector: 'Projector AI',
   none: 'No Tool',
 };
 

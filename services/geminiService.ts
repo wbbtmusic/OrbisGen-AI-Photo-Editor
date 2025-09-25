@@ -6,6 +6,24 @@
 import { GoogleGenAI, GenerateContentResponse, Modality, HarmCategory, HarmBlockThreshold, Type } from "@google/genai";
 import { AddPersonOptions, Theme, AspectRatio } from "../types";
 
+const getApiKey = (): string => {
+    // AI Studio environment variable takes precedence.
+    if (process.env.API_KEY) {
+        return process.env.API_KEY;
+    }
+    // Fallback to user-provided key from localStorage.
+    try {
+        const userKey = localStorage.getItem('orbisGenUserApiKey');
+        if (userKey) {
+            return userKey;
+        }
+    } catch (e) {
+        console.error("Could not access localStorage for API key.", e);
+    }
+    // Return empty string if no key is found. The SDK will handle the error.
+    return '';
+};
+
 export const THEMES: Record<string, Omit<Theme, 'key'>> = {
   albumArt: {
     title: 'Album Art',
@@ -123,7 +141,7 @@ export const generateEditedImage = async (
     selection: { x: number, y: number, width: number, height: number }
 ): Promise<string> => {
     console.log('Starting generative edit within:', selection);
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+    const ai = new GoogleGenAI({ apiKey: getApiKey() });
     
     const originalImagePart = await fileToPart(originalImage);
     const prompt = `You are an expert photo editor AI, specializing in photorealistic subject manipulation. Your task is to perform a natural, localized edit on the provided image based on the user's request, constrained to a specific area. The final result must be indistinguishable from a real photograph.
@@ -174,7 +192,7 @@ export const generateFilteredImage = async (
     filterPrompt: string,
 ): Promise<string> => {
     console.log(`Starting filter generation: ${filterPrompt}`);
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+    const ai = new GoogleGenAI({ apiKey: getApiKey() });
     
     const originalImagePart = await fileToPart(originalImage);
     const prompt = `You are an expert photo editor AI. Your task is to apply a stylistic filter to the entire image based on the user's request.
@@ -217,7 +235,7 @@ export const generateAdjustedImage = async (
     adjustmentPrompt: string,
 ): Promise<string> => {
     console.log(`Starting global adjustment generation: ${adjustmentPrompt}`);
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+    const ai = new GoogleGenAI({ apiKey: getApiKey() });
     
     const originalImagePart = await fileToPart(originalImage);
     const prompt = `You are an expert photo editor AI. Your task is to apply a global, photorealistic photo adjustment to the entire image based on the user's request. The result must be indistinguishable from a real photograph.
@@ -260,7 +278,7 @@ export const generateReplacedBackgroundImage = async (
     backgroundPrompt: string,
 ): Promise<string> => {
     console.log(`Starting background replacement: ${backgroundPrompt}`);
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+    const ai = new GoogleGenAI({ apiKey: getApiKey() });
     
     const originalImagePart = await fileToPart(originalImage);
     const prompt = `You are an expert photo editor AI. Your task is to precisely identify the main foreground subject(s) in this image. Then, perfectly remove the original background and replace it with a new one based on the user's request. The final image must be photorealistic and indistinguishable from a real photograph.
@@ -302,7 +320,7 @@ export const generateColorGradedImage = async (
     styleImage: File,
 ): Promise<string> => {
     console.log(`Starting color grading from style image.`);
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+    const ai = new GoogleGenAI({ apiKey: getApiKey() });
     
     const originalImagePart = await fileToPart(originalImage);
     const styleImagePart = await fileToPart(styleImage);
@@ -350,7 +368,7 @@ export const generateStudioEffect = async (
     studioPrompt: string,
 ): Promise<string> => {
     console.log(`Starting studio effect generation: ${studioPrompt}`);
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+    const ai = new GoogleGenAI({ apiKey: getApiKey() });
     
     const originalImagePart = await fileToPart(originalImage);
     const prompt = `You are a professional product and studio photographer AI. Your task is to apply a realistic studio effect to the provided image based on the user's request. You must correctly identify the main subject and apply the effect in a photorealistic way that is indistinguishable from a real photograph.
@@ -397,7 +415,7 @@ export const generateInscribedText = async (
     selection: { x: number; y: number, width: number, height: number }
 ): Promise<string> => {
     console.log(`Generating text "${text}" in style "${style}" within`, selection);
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+    const ai = new GoogleGenAI({ apiKey: getApiKey() });
     
     const originalImagePart = await fileToPart(originalImage);
     const prompt = `You are a master graphic designer AI. Your task is to add text to the provided image within a specified bounding box. The text must be seamlessly integrated, appearing as if it's a natural part of the scene and indistinguishable from a real object.
@@ -438,7 +456,7 @@ export const generateReplacedSky = async (
     skyPrompt: string
 ): Promise<string> => {
     console.log(`Replacing sky with: ${skyPrompt}`);
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+    const ai = new GoogleGenAI({ apiKey: getApiKey() });
     
     const originalImagePart = await fileToPart(originalImage);
     const prompt = `You are an expert landscape photographer and photo editor AI. Your task is to perform a sky replacement on the provided image.
@@ -481,7 +499,7 @@ export const generateInsertedObject = async (
     selection: { x: number; y: number, width: number, height: number }
 ): Promise<string> => {
     console.log(`Inserting object "${objectPrompt}" within`, selection);
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+    const ai = new GoogleGenAI({ apiKey: getApiKey() });
     
     const originalImagePart = await fileToPart(originalImage);
     const prompt = `You are a master digital compositor AI. Your task is to generate and insert an object into the provided image within a specified bounding box. The final result must be indistinguishable from a real photograph.
@@ -522,7 +540,7 @@ export const generateFusedFaceImage = async (
     faceRefImage: File,
 ): Promise<string> => {
     console.log(`Starting face fusion.`);
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+    const ai = new GoogleGenAI({ apiKey: getApiKey() });
     
     const originalImagePart = await fileToPart(originalImage);
     const faceRefImagePart = await fileToPart(faceRefImage);
@@ -571,7 +589,7 @@ export const generateStyleTransferredImage = async (
     styleRefImage: File,
 ): Promise<string> => {
     console.log(`Starting clothing transfer.`);
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+    const ai = new GoogleGenAI({ apiKey: getApiKey() });
     
     const originalImagePart = await fileToPart(originalImage);
     const styleRefImagePart = await fileToPart(styleRefImage);
@@ -619,7 +637,7 @@ export const generateSwappedFaceImage = async (
     faceRefImage: File,
 ): Promise<string> => {
     console.log(`Starting face swap.`);
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+    const ai = new GoogleGenAI({ apiKey: getApiKey() });
     
     const originalImagePart = await fileToPart(originalImage);
     const faceRefImagePart = await fileToPart(faceRefImage);
@@ -667,7 +685,7 @@ export const generateCompositedPersonImage = async (
     options: AddPersonOptions,
 ): Promise<string> => {
     console.log(`Starting 'Add Person' with options:`, options);
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+    const ai = new GoogleGenAI({ apiKey: getApiKey() });
     
     const originalImagePart = await fileToPart(originalImage);
     const parts: any[] = [{ text: "Original Image:" }, originalImagePart];
@@ -744,7 +762,7 @@ export const generateMakeupTransferredImage = async (
     makeupRefImage: File,
 ): Promise<string> => {
     console.log(`Starting makeup transfer.`);
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+    const ai = new GoogleGenAI({ apiKey: getApiKey() });
     
     const originalImagePart = await fileToPart(originalImage);
     const makeupRefImagePart = await fileToPart(makeupRefImage);
@@ -791,7 +809,7 @@ export const generateMakeup = async (
     prompt: string,
 ): Promise<string> => {
     console.log(`Starting makeup generation with prompt: ${prompt}`);
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+    const ai = new GoogleGenAI({ apiKey: getApiKey() });
     
     const originalImagePart = await fileToPart(originalImage);
     const textPart = { text: `You are an AI makeup artist. Your task is to apply makeup to the person in this image based on the user's request.
@@ -828,7 +846,7 @@ export const expandImage = async (
     prompt: string,
 ): Promise<string> => {
     console.log(`Expanding image with prompt: ${prompt}`);
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+    const ai = new GoogleGenAI({ apiKey: getApiKey() });
     
     const originalImagePart = await fileToPart(originalImage);
     const textPart = { text: `You are a creative AI artist. Your task is to take the core subject of this image and place it in a completely new, surprising, and creative scene, expanding the canvas (outpainting) as needed.
@@ -865,7 +883,7 @@ export const generativeExpand = async (
     prompt: string
 ): Promise<string> => {
     console.log(`Generatively expanding image with prompt: ${prompt}`);
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+    const ai = new GoogleGenAI({ apiKey: getApiKey() });
     
     const imagePart = await fileToPart(paddedImage);
     const textPart = { text: `You are an expert AI photo editor with the ability to "outpaint" or generatively fill transparent areas of an image. The user has provided an image with transparent padding around it.
@@ -905,7 +923,7 @@ export const generateStyledImage = async (
     stylePrompt: string,
 ): Promise<string> => {
     console.log(`Starting persona generation: ${stylePrompt}`);
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+    const ai = new GoogleGenAI({ apiKey: getApiKey() });
     
     const originalImagePart = await fileToPart(originalImage);
     const prompt = `You are a creative AI artist specializing in character and style transformations. Your task is to completely reimagine the person in the provided image based on a specific style request, while preserving their core identity.
@@ -944,7 +962,7 @@ export const generateNewCameraAngle = async (
     anglePrompt: string,
 ): Promise<string> => {
     console.log(`Generating new camera angle: ${anglePrompt}`);
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+    const ai = new GoogleGenAI({ apiKey: getApiKey() });
     
     const originalImagePart = await fileToPart(originalImage);
     const prompt = `You are an AI virtual cinematographer. Your task is to re-render the provided image from a completely new camera angle, as described by the user.
@@ -973,13 +991,116 @@ Output: Return ONLY the final image from the new angle. Do not return text.`;
 };
 
 /**
+ * Transforms an image to a different historical era.
+ * @param originalImage The original image file.
+ * @param eraPrompt A text prompt describing the target era.
+ * @returns A promise that resolves to the data URL of the transformed image.
+ */
+export const generateTimeTraveledImage = async (
+    originalImage: File,
+    eraPrompt: string,
+): Promise<string> => {
+    console.log(`Starting time travel to: ${eraPrompt}`);
+    const ai = new GoogleGenAI({ apiKey: getApiKey() });
+    
+    const originalImagePart = await fileToPart(originalImage);
+    const prompt = `You are a historian and expert photo editor AI. Your task is to transform this entire image to look as if it were taken in the following era: "${eraPrompt}". The result must be a believable and seamless fabrication.
+
+CRITICAL INSTRUCTIONS:
+1.  **IDENTITY PRESERVATION (PARAMOUNT):** The recognizable facial features, ethnicity, bone structure, and unique identity of any person in the image MUST be perfectly and absolutely preserved. The person must look like the same individual, simply transported to another time. Any alteration of their core facial structure or identity is a failure.
+2.  **POSE & COMPOSITION PRESERVATION:** The core pose of any person and the fundamental composition of the scene (e.g., subject on the left, background element on the right) MUST be preserved. Do not change their posture or the general layout.
+3.  **AUTHENTIC & COMPLETE TRANSFORMATION:** You MUST change the clothing, the entire environment/background, objects, technology, and overall photographic style (e.g., color saturation, grain, lighting) to be authentically representative of the specified era. For example, a 1920s photo should be black and white with period-correct clothing and background. A cyberpunk future should feature neon lights, futuristic attire, and a high-tech setting.
+4.  **PHOTOREALISTIC & SEAMLESS RESULT:** The final image must be high-quality and photorealistic, appearing as a genuine photograph from that time period. The integration of the subject into the new era must be flawless.
+5.  **DIMENSION PRESERVATION:** The final image MUST have the exact same dimensions as the original image.
+
+Output: Return ONLY the final, time-traveled image. Do not return text.`;
+    const textPart = { text: prompt };
+
+    console.log('Sending image and time travel prompt to the model...');
+    const response: GenerateContentResponse = await ai.models.generateContent({
+        model: 'gemini-2.5-flash-image-preview',
+        contents: { parts: [originalImagePart, textPart] },
+        config: {
+          safetySettings,
+          responseModalities: [Modality.IMAGE, Modality.TEXT],
+        },
+    });
+    console.log('Received response from model for time travel.', response);
+    
+    return handleApiResponse(response, 'time travel');
+};
+
+/**
+ * Realistically projects a texture or pattern onto a selected area of an image.
+ * @param originalImage The base image.
+ * @param patternImage The image containing the pattern to apply.
+ * @param selection The area to apply the pattern to.
+ * @param scale The percentage to scale the pattern.
+ * @param strength The strength/opacity of the blend.
+ * @param prompt An optional text description of the pattern.
+ * @returns A promise resolving to the data URL of the edited image.
+ */
+export const generateProjectedTexture = async (
+    originalImage: File,
+    patternImage: File,
+    selection: { x: number; y: number; width: number; height: number },
+    scale: number,
+    strength: number,
+    prompt: string
+): Promise<string> => {
+    console.log(`Projecting texture with scale ${scale}, strength ${strength}, and prompt: "${prompt}"`);
+    const ai = new GoogleGenAI({ apiKey: getApiKey() });
+    
+    const originalImagePart = await fileToPart(originalImage);
+    const patternImagePart = await fileToPart(patternImage);
+
+    const mainPrompt = `You are an expert digital artist specializing in realistic texture projection. You will be given an 'Original Image', a 'Pattern Image', and a selection area.
+
+Your task is to apply the texture/pattern from the 'Pattern Image' onto the 'Original Image', but ONLY within the specified selection area. The result must be photorealistic and indistinguishable from a real object with that pattern.
+
+Selection Area: Perform the edit ONLY within the bounding box defined by top-left corner (x: ${selection.x}, y: ${selection.y}) and dimensions (width: ${selection.width}, height: ${selection.height}).
+User Guidance for Pattern: "${prompt || 'Apply the pattern from the image as a texture.'}"
+
+CRITICAL INSTRUCTIONS:
+1.  **Analyze Surface:** Deeply analyze the geometry, perspective, folds, wrinkles, and existing texture of the surface within the selection area of the 'Original Image'.
+2.  **Warp Pattern:** Realistically warp, stretch, and bend the pattern from the 'Pattern Image' to perfectly conform to the 3D contours of the surface. The pattern should look like it's naturally part of the object, not just a flat overlay.
+3.  **Integrate Lighting:** The applied pattern MUST be re-lit to match the lighting, shadows, and highlights of the 'Original Image' perfectly. If part of the surface is in shadow, the pattern on it must also be in shadow.
+4.  **Blend Textures:** Blend the new pattern with the original surface's underlying texture based on the 'Effect Strength' of ${strength}%. A strength of 100 completely replaces the original texture, while 50 is a semi-transparent blend.
+5.  **Adjust Scale:** The pattern from the 'Pattern Image' should be tiled or scaled to ${scale}% of its original size before being applied to the surface.
+6.  **Preserve Outside:** Everything outside the selection area must remain completely untouched.
+7.  **Preserve Identity:** If the selection is on a person, their identity, face, and body shape must be preserved.
+8.  **Preserve Dimensions:** The output image must have the exact same dimensions as the 'Original Image'.
+
+Output: Return ONLY the final edited image. Do not return text.`;
+    const textPart = { text: mainPrompt };
+
+    const response: GenerateContentResponse = await ai.models.generateContent({
+        model: 'gemini-2.5-flash-image-preview',
+        contents: { parts: [
+            { text: "Original Image:"},
+            originalImagePart,
+            { text: "Pattern Image:"},
+            patternImagePart,
+            textPart
+        ]},
+        config: {
+          safetySettings,
+          responseModalities: [Modality.IMAGE, Modality.TEXT],
+        },
+    });
+    
+    return handleApiResponse(response, 'texture projection');
+};
+
+
+/**
  * Generates AI-powered suggestions for a given tool context.
  * @param toolContext A string describing the tool, e.g., "Artistic Filters".
  * @returns A promise that resolves to an array of suggestion objects.
  */
 export const generateAiSuggestions = async (toolContext: string): Promise<{name: string, prompt: string}[]> => {
     console.log(`Generating suggestions for: ${toolContext}`);
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+    const ai = new GoogleGenAI({ apiKey: getApiKey() });
     
     const prompt = `You are a creative assistant for a photo editor. Generate 4 unique, creative, and interesting ideas for the tool: "${toolContext}".
 For each idea, provide a short, catchy "name" (3 words max) and a detailed, descriptive "prompt" that the AI can use to execute the idea.
@@ -1027,7 +1148,7 @@ export const generateImageFromText = async (
     aspectRatio: AspectRatio,
 ): Promise<string> => {
     console.log(`Generating image from text: "${prompt}" with aspect ratio ${aspectRatio}`);
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+    const ai = new GoogleGenAI({ apiKey: getApiKey() });
     
     const response = await ai.models.generateImages({
         model: 'imagen-4.0-generate-001',
@@ -1085,7 +1206,7 @@ export const compositePersonIntoScene = async (
  */
 export const createAiTheme = async (idea: string): Promise<{ title: string; description:string; categories: string[] }> => {
     console.log(`Generating AI theme for: ${idea}`);
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+    const ai = new GoogleGenAI({ apiKey: getApiKey() });
     
     const response: GenerateContentResponse = await ai.models.generateContent({
         model: 'gemini-2.5-flash',
@@ -1134,7 +1255,7 @@ const dataUrlToPart = (dataUrl: string) => {
 
 export const generateModelImage = async (userImage: File): Promise<string> => {
     // Fix: Initialize the Gemini AI client.
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+    const ai = new GoogleGenAI({ apiKey: getApiKey() });
     const userImagePart = await fileToPart(userImage);
     const prompt = "You are an expert fashion photographer AI. Transform the person in this image into a full-body fashion model photo suitable for an e-commerce website. The background must be a clean, neutral studio backdrop (light gray, #f0f0f0). The person should have a neutral, professional model expression. Preserve the person's identity, unique features, and body type, but place them in a standard, relaxed standing model pose. The final image must be photorealistic. Return ONLY the final image.";
     const response = await ai.models.generateContent({
@@ -1150,7 +1271,7 @@ export const generateModelImage = async (userImage: File): Promise<string> => {
 
 export const generateVirtualTryOnImage = async (modelImageUrl: string, garmentImage: File): Promise<string> => {
     // Fix: Initialize the Gemini AI client.
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+    const ai = new GoogleGenAI({ apiKey: getApiKey() });
     const modelImagePart = dataUrlToPart(modelImageUrl);
     const garmentImagePart = await fileToPart(garmentImage);
     const prompt = `You are an expert virtual try-on AI. You will be given a 'model image' and a 'garment image'. Your task is to create a new photorealistic image where the person from the 'model image' is wearing the clothing from the 'garment image'.
@@ -1175,7 +1296,7 @@ export const generateVirtualTryOnImage = async (modelImageUrl: string, garmentIm
 
 export const generatePoseVariation = async (tryOnImageUrl: string, poseInstruction: string): Promise<string> => {
     // Fix: Initialize the Gemini AI client.
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+    const ai = new GoogleGenAI({ apiKey: getApiKey() });
     const tryOnImagePart = dataUrlToPart(tryOnImageUrl);
     const prompt = `You are an expert fashion photographer AI. Take this image and regenerate it from a different perspective. The person, clothing, and background style must remain identical. The new perspective should be: "${poseInstruction}". Return ONLY the final image.`;
     const response = await ai.models.generateContent({

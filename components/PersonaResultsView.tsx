@@ -119,11 +119,13 @@ const AestheticResultsView: React.FC<AestheticResultsViewProps> = ({
       setIsDownloadingAlbum(true);
       try {
         const successfulImages: Record<string, string> = {};
-        Object.entries(generatedImages).forEach(([category, result]) => {
-            if (result.status === 'done' && result.url) {
+        // FIX: Replaced forEach with a for...of loop over Object.keys to ensure proper type inference of `result`, avoiding errors with `unknown` type.
+        for (const category of Object.keys(generatedImages)) {
+            const result = generatedImages[category];
+            if (result?.status === 'done' && result.url) {
                 successfulImages[category] = result.url;
             }
-        });
+        }
 
         if (Object.keys(successfulImages).length === 0) {
             alert("No images have been generated successfully to create a collage.");
@@ -195,6 +197,7 @@ const AestheticResultsView: React.FC<AestheticResultsViewProps> = ({
                                 animate={{ opacity: 1, y: 0, scale: 1 }}
                                 transition={{ duration: 0.4, delay: index * 0.1, ease: "easeOut" }}
                             >
+                                {/* Fix: imageData is correctly typed due to the fix in the component's props, allowing safe property access. */}
                                 <GeneratedImageCard
                                     caption={category}
                                     status={imageData?.status || 'pending'}
@@ -244,7 +247,7 @@ const AestheticResultsView: React.FC<AestheticResultsViewProps> = ({
                                 className="absolute -top-3 -right-3 z-10 p-2 bg-white rounded-full text-black hover:scale-110 transition-transform shadow-lg"
                                 aria-label="Close enlarged view"
                             >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                             </button>
 
                             <div className="p-4">

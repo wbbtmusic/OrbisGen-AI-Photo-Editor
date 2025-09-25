@@ -182,6 +182,23 @@ export const ExpandIcon: React.FC<{ className?: string }> = ({ className }) => (
         <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75v4.5m0-4.5h-4.5m4.5 0L15 9m5.25 11.25v-4.5m0 4.5h-4.5m4.5 0L15 15" />
     </Icon>
 );
+export const TimeTravelerIcon: React.FC<{ className?: string }> = ({ className }) => (
+    <Icon className={className}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M6 2h12v4H6z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18h12v4H6z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M8 6l8 12M16 6l-8 12" />
+    </Icon>
+);
+export const ProjectorIcon: React.FC<{ className?: string }> = ({ className }) => (
+    <Icon className={className}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M7 12V8a1 1 0 011-1h8a1 1 0 011 1v4" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M4 12a2 2 0 00-2 2v2a2 2 0 002 2h16a2 2 0 002-2v-2a2 2 0 00-2-2H4z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 12V7" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12l5-3" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12L4 9" />
+    </Icon>
+);
+
 
 // --- UI ICONS ---
 export const HomeIcon: React.FC<{ className?: string }> = ({ className }) => (

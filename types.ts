@@ -29,6 +29,8 @@ export type Tool =
   | 'aestheticAI'
   | 'layers'
   | 'cameraAngles'
+  | 'timeTraveler'
+  | 'projector'
   | 'none';
 
 export interface HistoryEntry {
@@ -111,6 +113,17 @@ export interface GeneratedAngleImage {
   status: ImageGenerationStatus;
   error?: string;
 }
+
+// New types for Time Traveler feature
+export type TimeTravelerStatus = 'selection' | 'generating' | 'results-shown';
+
+export interface TimeTravelerState {
+    status: TimeTravelerStatus;
+    generationPrompts: { name: string, prompt: string }[];
+}
+
+export type GeneratedTimeTravelerImage = GeneratedImage;
+
 
 // Types for new Fashion AI / Virtual Try-On tool
 export interface WardrobeItem {

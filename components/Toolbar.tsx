@@ -14,7 +14,8 @@ import {
     SkyIcon, InsertIcon, AddPersonIcon, TextGenIcon, CameraAnglesIcon, 
     PortraitIcon, FashionIcon, MakeupIcon, MakeupTransferIcon, 
     StyleTransferIcon, FaceSwapIcon, FaceFusionIcon, PaletteIcon, 
-    ColorGradeIcon, StudioIcon, RandomizeIcon, ExpandIcon
+    ColorGradeIcon, StudioIcon, RandomizeIcon, ExpandIcon, TimeTravelerIcon,
+    ProjectorIcon
 } from './icons';
 
 export interface ToolDefinition {
@@ -88,7 +89,9 @@ export const toolCategories: ToolCategory[] = [
     tools: [
       { name: 'filters', icon: StyleEffectsCategoryIcon, label: 'Artistic Filters' },
       { name: 'colorGrade', icon: ColorGradeIcon, label: 'Color Grade' },
+      { name: 'projector', icon: ProjectorIcon, label: 'Projector AI' },
       { name: 'studio', icon: StudioIcon, label: 'Studio AI' },
+      { name: 'timeTraveler', icon: TimeTravelerIcon, label: 'Time Traveler' },
       { name: 'aestheticAI', icon: PaletteIcon, label: 'Aesthetic AI' },
       { name: 'cameraAngles', icon: CameraAnglesIcon, label: 'Camera Angles' },
       { name: 'randomize', icon: RandomizeIcon, label: 'Randomize' },

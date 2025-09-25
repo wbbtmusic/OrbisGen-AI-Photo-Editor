@@ -4,7 +4,7 @@
 */
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AddPersonOptions, GeneratedImage, AestheticState, Theme, Tool, Layer, CameraAnglesState, GeneratedAngleImage, OutfitLayer, WardrobeItem } from '../types';
+import { AddPersonOptions, GeneratedImage, AestheticState, Theme, Tool, Layer, CameraAnglesState, GeneratedAngleImage, OutfitLayer, WardrobeItem, TimeTravelerState, GeneratedTimeTravelerImage } from '../types';
 import { toolCategories, ToolDefinition } from './Toolbar';
 import { CloseIcon } from './icons';
 
@@ -31,6 +31,8 @@ import AestheticPanel from './PersonaPanel';
 import LayersPanel from './LayersPanel';
 import CameraAnglesPanel from './CameraAnglesPanel';
 import ExpandPanel from './ExpandPanel';
+import TimeTravelerPanel from './TimeTravelerPanel';
+import ProjectorPanel from './ProjectorPanel';
 
 
 export const toolDisplayName: Record<Tool, string> = {
@@ -57,6 +59,8 @@ export const toolDisplayName: Record<Tool, string> = {
   aestheticAI: 'Aesthetic AI',
   cameraAngles: 'Camera Angles',
   layers: 'Layers',
+  timeTraveler: 'Time Traveler',
+  projector: 'Projector AI',
   none: 'No Tool',
 };
 
@@ -114,6 +118,7 @@ export interface ToolOptionsProps {
     onApplyMakeup: (prompt: string) => void;
     onApplyRandomize: () => void;
     onApplyExpand: (aspectRatio: number, prompt: string) => void;
+    onApplyProjection: (patternFile: File, scale: number, strength: number, prompt: string) => void;
     originalImageFile: File | null;
     onGenerateAesthetics: (theme: Theme, categories:string[]) => void;
     onUseGeneratedImageInEditor: (imageUrl: string) => void;
@@ -124,6 +129,10 @@ export interface ToolOptionsProps {
     cameraAnglesState: CameraAnglesState;
     setCameraAnglesState: React.Dispatch<React.SetStateAction<CameraAnglesState>>;
     generatedAngleImages: Record<string, GeneratedAngleImage>;
+    onGenerateTimeTravelerImages: (prompts: { name: string, prompt: string }[]) => void;
+    timeTravelerState: TimeTravelerState;
+    setTimeTravelerState: React.Dispatch<React.SetStateAction<TimeTravelerState>>;
+    generatedTimeTravelerImages: Record<string, GeneratedTimeTravelerImage>;
     layers: Layer[];
     onAddLayer: (file: File) => void;
     onUpdateLayer: (id: string, updates: Partial<Omit<Layer, 'id' | 'name' | 'imageUrl'>>) => void;
@@ -161,6 +170,8 @@ const ToolOptions: React.FC<ToolOptionsProps> = (props) => {
           return <ExpandPanel onApplyExpand={props.onApplyExpand} isLoading={isLoading} />;
         case 'colorGrade':
           return <ColorGradePanel onApplyColorGrade={props.onApplyColorGrade} isLoading={isLoading} />;
+        case 'projector':
+          return <ProjectorPanel onApply={props.onApplyProjection} isLoading={isLoading} hasSelection={hasSelection} />;
         case 'faceFusion':
           return <FaceFusionPanel onApplyFaceFusion={props.onApplyFaceFusion} isLoading={isLoading} />;
         case 'clothingTransfer':
@@ -206,6 +217,8 @@ const ToolOptions: React.FC<ToolOptionsProps> = (props) => {
           return <AestheticPanel onGenerate={props.onGenerateAesthetics} />;
         case 'cameraAngles':
           return <CameraAnglesPanel onGenerate={props.onGenerateCameraAngles} isLoading={isLoading} />;
+        case 'timeTraveler':
+          return <TimeTravelerPanel onGenerate={props.onGenerateTimeTravelerImages} isLoading={isLoading} />;
         default:
           return <div className="p-4 text-center text-sm text-zinc-400">Select a tool from the toolbar to see its options.</div>;
     }

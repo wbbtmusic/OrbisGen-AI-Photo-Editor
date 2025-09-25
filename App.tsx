@@ -29,10 +29,12 @@ import {
   generateModelImage,
   generateVirtualTryOnImage,
   generatePoseVariation,
-  generativeExpand
+  generativeExpand,
+  generateTimeTraveledImage,
+  generateProjectedTexture
 } from './services/geminiService';
 import { saveRecentProject, rotateImage, flipImageHorizontal } from './lib/utils';
-import { type Tool, type HistoryEntry, type AddPersonOptions, type AestheticState, type GeneratedImage, type Theme, type Layer, type CameraAnglesState, type GeneratedAngleImage, type OutfitLayer, type WardrobeItem } from './types';
+import { type Tool, type HistoryEntry, type AddPersonOptions, type AestheticState, type GeneratedImage, type Theme, type Layer, type CameraAnglesState, type GeneratedAngleImage, type OutfitLayer, type WardrobeItem, type TimeTravelerState, GeneratedTimeTravelerImage } from './types';
 import EditorCanvas, { type EditorCanvasRef } from './components/EditorCanvas';
 import Toolbar from './components/Toolbar';
 import Header from './components/Header';
@@ -42,6 +44,7 @@ import AestheticResultsView from './components/PersonaResultsView';
 import ZoomControls from './components/ZoomControls';
 import DesignStudio from './components/DesignStudio';
 import DisclaimerModal from './components/DisclaimerModal';
+import ApiKeyModal from './components/ApiKeyModal';
 import { dataURLtoFile, fileToDataURL } from './lib/utils';
 import { AdjustSlidersIcon } from './components/icons';
 import { defaultWardrobe } from './lib/wardrobe';
@@ -84,6 +87,7 @@ const App: React.FC = () => {
   const [layers, setLayers] = useState<Layer[]>([]);
   const [loadingMessage, setLoadingMessage] = useState(loadingMessages[0]);
   const [showDisclaimer, setShowDisclaimer] = useState(false);
+  const [showApiKeyModal, setShowApiKeyModal] = useState(false);
 
   const editorCanvasRef = useRef<EditorCanvasRef>(null);
   const [selection, setSelection] = useState<PixelCrop | null>(null);
@@ -107,6 +111,14 @@ const App: React.FC = () => {
     generationPrompts: [],
   });
   const [generatedAngleImages, setGeneratedAngleImages] = useState<Record<string, GeneratedAngleImage>>({});
+
+  // Time Traveler State
+  const [timeTravelerState, setTimeTravelerState] = useState<TimeTravelerState>({
+    status: 'selection',
+    generationPrompts: [],
+  });
+  const [generatedTimeTravelerImages, setGeneratedTimeTravelerImages] = useState<Record<string, GeneratedTimeTravelerImage>>({});
+
 
   // Tool Options State
   const [addPersonOptions, setAddPersonOptions] = useState<AddPersonOptions>(initialAddPersonOptions);
@@ -132,6 +144,19 @@ const App: React.FC = () => {
     } catch (error) {
       console.error("Could not access localStorage:", error);
       setShowDisclaimer(true); 
+    }
+
+    try {
+        const hasEnvKey = !!process.env.API_KEY;
+        const hasUserKey = !!localStorage.getItem('orbisGenUserApiKey');
+        if (!hasEnvKey && !hasUserKey) {
+            setShowApiKeyModal(true);
+        }
+    } catch (error) {
+        console.error("Could not access localStorage for API key check:", error);
+        if (!process.env.API_KEY) {
+            setShowApiKeyModal(true);
+        }
     }
   }, []);
 
@@ -200,6 +225,8 @@ const App: React.FC = () => {
         setGeneratedImages({});
         setCameraAnglesState({ status: 'selection', generationPrompts: [] });
         setGeneratedAngleImages({});
+        setTimeTravelerState({ status: 'selection', generationPrompts: [] });
+        setGeneratedTimeTravelerImages({});
         setAddPersonOptions(initialAddPersonOptions);
         setFashionState({ modelImageUrl: null, outfitHistory: [], currentOutfitIndex: 0, currentPoseIndex: 0, wardrobe: defaultWardrobe, status: 'create_model' });
     } catch (err) {
@@ -219,6 +246,8 @@ const App: React.FC = () => {
       setGeneratedImages({});
       setCameraAnglesState({ status: 'selection', generationPrompts: [] });
       setGeneratedAngleImages({});
+      setTimeTravelerState({ status: 'selection', generationPrompts: [] });
+      setGeneratedTimeTravelerImages({});
       setAddPersonOptions(initialAddPersonOptions);
       setFashionState({ modelImageUrl: null, outfitHistory: [], currentOutfitIndex: 0, currentPoseIndex: 0, wardrobe: defaultWardrobe, status: 'create_model' });
       setIsToolPanelVisible(false);
@@ -236,7 +265,7 @@ const App: React.FC = () => {
 
   const handleRedo = () => {
     if (historyIndex < history.length - 1) {
-      setHistoryIndex(historyIndex + 1);
+      setHistoryIndex(historyIndex - 1);
     }
   };
 
@@ -327,7 +356,7 @@ const App: React.FC = () => {
       }));
       updateHistory(generatedUrl);
     } catch (err) {
-      // Fix: assign error message to a variable to help type inference.
+      // FIX: The 'err' object in a catch block is of type 'unknown'. Check if it's an Error instance before using its message to avoid type errors.
       const errorMessage = err instanceof Error ? err.message : 'Failed to create model';
       setError(errorMessage);
     } finally {
@@ -367,7 +396,7 @@ const App: React.FC = () => {
         wardrobe: newWardrobe
       }));
     } catch (err) {
-      // Fix: assign error message to a variable to help type inference.
+      // FIX: The 'err' object in a catch block is of type 'unknown'. Check if it's an Error instance before using its message to avoid type errors.
       const errorMessage = err instanceof Error ? err.message : 'Failed to apply garment';
       setError(errorMessage);
     } finally {
@@ -407,7 +436,7 @@ const App: React.FC = () => {
       });
       updateHistory(newImageUrl);
     } catch (err) {
-      // Fix: assign error message to a variable to help type inference.
+      // Fix: The 'err' object in a catch block is of type 'unknown'. Check if it's an Error instance before using its message.
       const errorMessage = err instanceof Error ? err.message : 'Failed to change pose';
       setError(errorMessage);
       setFashionState(prev => ({ ...prev, currentPoseIndex: prevPoseIndex }));
@@ -510,6 +539,37 @@ const App: React.FC = () => {
     setCameraAnglesState(prev => ({ ...prev, status: 'results-shown' }));
   }, [originalImageFile]);
 
+  const handleGenerateTimeTravelerImages = useCallback(async (prompts: { name: string, prompt: string }[]) => {
+    if (!originalImageFile) return;
+    
+    setIsToolPanelVisible(false);
+    setIsLoading(true);
+    setTimeTravelerState({ status: 'generating', generationPrompts: prompts });
+    setGeneratedTimeTravelerImages(
+      prompts.reduce((acc, p) => ({ ...acc, [p.name]: { status: 'pending' } }), {})
+    );
+
+    await Promise.allSettled(prompts.map(async (p) => {
+      try {
+        const newImageUrl = await generateTimeTraveledImage(originalImageFile, p.prompt);
+        setGeneratedTimeTravelerImages(prev => ({
+          ...prev,
+          [p.name]: { status: 'done', url: newImageUrl },
+        }));
+      } catch (err) {
+        console.error(`Error generating time traveler image for "${p.name}":`, err);
+        const errorMessage = err instanceof Error ? err.message : 'Generation failed.';
+        setGeneratedTimeTravelerImages(prev => ({
+          ...prev,
+          [p.name]: { status: 'error', error: errorMessage },
+        }));
+      }
+    }));
+    
+    setIsLoading(false);
+    setTimeTravelerState(prev => ({ ...prev, status: 'results-shown' }));
+  }, [originalImageFile]);
+
 
   const handleUseGeneratedImageInEditor = (imageUrl: string) => {
       const newHistory = [{ imageUrl }];
@@ -524,6 +584,8 @@ const App: React.FC = () => {
       setGeneratedImages({});
       setCameraAnglesState({ status: 'selection', generationPrompts: [] });
       setGeneratedAngleImages({});
+      setTimeTravelerState({ status: 'selection', generationPrompts: [] });
+      setGeneratedTimeTravelerImages({});
       
       setActiveTool('adjust');
       setIsToolPanelVisible(true);
@@ -545,11 +607,11 @@ const App: React.FC = () => {
     generator: (image: File, prompt: string, selection?: PixelCrop) => Promise<string>,
     prompt: string
   ) => {
-    if (!selection && ['retouch', 'portrait', 'textGen', 'insert'].includes(activeTool)) {
+    if (!selection && ['retouch', 'portrait', 'textGen', 'insert', 'projector'].includes(activeTool)) {
       setError("Please make a selection on the image first.");
       return;
     }
-    const args = ['retouch', 'portrait', 'textGen', 'insert'].includes(activeTool) ? [prompt, selection] : [prompt];
+    const args = ['retouch', 'portrait', 'textGen', 'insert', 'projector'].includes(activeTool) ? [prompt, selection] : [prompt];
     runGenerativeTask(generator as any, ...args);
   };
 
@@ -615,6 +677,15 @@ const App: React.FC = () => {
 }, [currentImageUrl, originalImageFile?.name]);
 
 
+    const handleApplyProjection = (patternFile: File, scale: number, strength: number, prompt: string) => {
+        if (!selection) {
+            setError("Please make a selection on the image first.");
+            return;
+        }
+        runGenerativeTask(generateProjectedTexture, patternFile, selection, scale, strength, prompt);
+    };
+
+
   // Layer Management
     const handleAddLayer = async (file: File) => {
         try {
@@ -637,7 +708,7 @@ const App: React.FC = () => {
     };
 
     const handleRemoveLayer = (id: string) => {
-        setLayers(prev => prev.filter(l => l.id !== id));
+        setLayers(prev => prev.filter(l => l.id === id));
     };
 
     const handleFlattenLayers = async () => {
@@ -717,11 +788,22 @@ const App: React.FC = () => {
       setShowDisclaimer(false);
     }
   };
+  
+  const handleSaveApiKey = (apiKey: string) => {
+    try {
+        localStorage.setItem('orbisGenUserApiKey', apiKey);
+        setShowApiKeyModal(false);
+    } catch (error) {
+        console.error("Could not save API key to localStorage:", error);
+        setError("Could not save your API key. Please ensure your browser allows site data to be saved.");
+    }
+  };
 
   if (appState === 'home') {
     return (
       <>
         <AnimatePresence>
+          {showApiKeyModal && <ApiKeyModal onSave={handleSaveApiKey} />}
           {showDisclaimer && <DisclaimerModal onAccept={handleAcceptDisclaimer} />}
         </AnimatePresence>
         <HomeScreen onFileSelect={handleFileSelect} onGoToDesignStudio={handleGoToDesignStudio} />
@@ -730,7 +812,14 @@ const App: React.FC = () => {
   }
   
   if (appState === 'design-studio') {
-      return <DesignStudio onExit={handleGoHome} onUseInEditor={handleFileSelect} />;
+      return (
+        <>
+            <AnimatePresence>
+                {showApiKeyModal && <ApiKeyModal onSave={handleSaveApiKey} />}
+            </AnimatePresence>
+            <DesignStudio onExit={handleGoHome} onUseInEditor={handleFileSelect} />
+        </>
+      );
   }
 
   const isAestheticResultsVisible = activeTool === 'aestheticAI' && 
@@ -738,8 +827,11 @@ const App: React.FC = () => {
   
   const isCameraAnglesResultsVisible = activeTool === 'cameraAngles' &&
     (cameraAnglesState.status === 'generating' || cameraAnglesState.status === 'results-shown');
+  
+  const isTimeTravelerResultsVisible = activeTool === 'timeTraveler' &&
+    (timeTravelerState.status === 'generating' || timeTravelerState.status === 'results-shown');
 
-  const isGenerationViewVisible = isAestheticResultsVisible || isCameraAnglesResultsVisible;
+  const isGenerationViewVisible = isAestheticResultsVisible || isCameraAnglesResultsVisible || isTimeTravelerResultsVisible;
   
   const canUndo = historyIndex > 0;
   const canRedo = historyIndex < history.length - 1;
@@ -776,6 +868,8 @@ const App: React.FC = () => {
     layers: layers, onAddLayer: handleAddLayer, onUpdateLayer: handleUpdateLayer, onRemoveLayer: handleRemoveLayer, onFlattenLayers: handleFlattenLayers,
     onGenerateCameraAngles: handleGenerateCameraAngles, cameraAnglesState: cameraAnglesState, setCameraAnglesState: setCameraAnglesState, generatedAngleImages: generatedAngleImages,
     onApplyExpand: handleApplyExpand,
+    onApplyProjection: handleApplyProjection,
+    onGenerateTimeTravelerImages: handleGenerateTimeTravelerImages, timeTravelerState: timeTravelerState, setTimeTravelerState: setTimeTravelerState, generatedTimeTravelerImages: generatedTimeTravelerImages,
     loadingMessage: loadingMessage,
     error: error,
   };
@@ -784,6 +878,7 @@ const App: React.FC = () => {
   return (
     <div className="w-screen h-screen bg-zinc-950 text-white flex flex-col overflow-hidden">
        <AnimatePresence>
+        {showApiKeyModal && <ApiKeyModal onSave={handleSaveApiKey} />}
         {showDisclaimer && <DisclaimerModal onAccept={handleAcceptDisclaimer} />}
       </AnimatePresence>
       <Header
@@ -818,18 +913,33 @@ const App: React.FC = () => {
           <div className="flex-1 relative flex items-center justify-center overflow-hidden">
             {isGenerationViewVisible ? (
               <AestheticResultsView 
-                title={isAestheticResultsVisible ? 'Aesthetic AI' : 'Camera Angles'}
-                subtitle={isAestheticResultsVisible ? aestheticState.selectedTheme?.title : 'Generated from new perspectives'}
-                generationCategories={isAestheticResultsVisible ? aestheticState.generationCategories : cameraAnglesState.generationPrompts.map(p => p.name)}
-                generatedImages={isAestheticResultsVisible ? generatedImages : generatedAngleImages}
+                title={
+                  isAestheticResultsVisible ? 'Aesthetic AI' : 
+                  isCameraAnglesResultsVisible ? 'Camera Angles' : 'Time Traveler'
+                }
+                subtitle={
+                  isAestheticResultsVisible ? aestheticState.selectedTheme?.title : 
+                  isCameraAnglesResultsVisible ? 'Generated from new perspectives' : 'Images from across the timeline'
+                }
+                generationCategories={
+                  isAestheticResultsVisible ? aestheticState.generationCategories : 
+                  isCameraAnglesResultsVisible ? cameraAnglesState.generationPrompts.map(p => p.name) : timeTravelerState.generationPrompts.map(p => p.name)
+                }
+                generatedImages={
+                  isAestheticResultsVisible ? generatedImages :
+                  isCameraAnglesResultsVisible ? generatedAngleImages : generatedTimeTravelerImages
+                }
                 onUseInEditor={handleUseGeneratedImageInEditor}
                 onBack={() => {
                   if (isAestheticResultsVisible) {
                     setAestheticState({ status: 'theme-selection', selectedTheme: null, generationCategories: [] });
                     setGeneratedImages({});
-                  } else {
+                  } else if (isCameraAnglesResultsVisible) {
                     setCameraAnglesState({ status: 'selection', generationPrompts: [] });
                     setGeneratedAngleImages({});
+                  } else if (isTimeTravelerResultsVisible) {
+                    setTimeTravelerState({ status: 'selection', generationPrompts: [] });
+                    setGeneratedTimeTravelerImages({});
                   }
                   setIsToolPanelVisible(true);
                 }}
@@ -921,6 +1031,14 @@ const App: React.FC = () => {
                     <div>
                         <p className="font-bold">Error</p>
                         <p className="text-sm">{error}</p>
+                        {error.toLowerCase().includes('api key') && (
+                            <button 
+                                onClick={() => setShowApiKeyModal(true)}
+                                className="mt-2 text-xs bg-red-600 px-2 py-1 rounded hover:bg-red-500"
+                            >
+                                Update API Key
+                            </button>
+                        )}
                     </div>
                     <button onClick={() => setError(null)} className="p-1 rounded-full hover:bg-red-700">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
