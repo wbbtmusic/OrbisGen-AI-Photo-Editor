@@ -5,7 +5,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 // Fix: Changed PersonaState to AestheticState to match exported types.
-import { AddPersonOptions, GeneratedImage, AestheticState, Theme, Tool, Layer, CameraAnglesState, GeneratedAngleImage } from '../types';
+import { AddPersonOptions, GeneratedImage, AestheticState, Theme, Tool, Layer, CameraAnglesState, GeneratedAngleImage, CosplayOptions } from '../types';
 import { toolCategories, ToolDefinition } from './Toolbar';
 import { CloseIcon } from './icons';
 
@@ -31,6 +31,7 @@ import RandomizePanel from './RandomizePanel';
 import AestheticPanel from './PersonaPanel';
 import LayersPanel from './LayersPanel';
 import CameraAnglesPanel from './CameraAnglesPanel';
+import CosplayPanel from './CosplayPanel';
 
 
 export const toolDisplayName: Record<Tool, string> = {
@@ -63,6 +64,8 @@ export const toolDisplayName: Record<Tool, string> = {
   timeTraveler: 'Time Traveler',
   // Fix: Add missing 'projector' property to satisfy the Record<Tool, string> type.
   projector: 'Projector AI',
+  // FIX: Added missing 'cosplay' property to satisfy the `Record<Tool, string>` type.
+  cosplay: 'Cosplay AI',
   none: 'No Tool',
 };
 
@@ -117,6 +120,9 @@ export interface ToolOptionsProps {
     onUpdateLayer: (id: string, updates: Partial<Omit<Layer, 'id' | 'name' | 'imageUrl'>>) => void;
     onRemoveLayer: (id: string) => void;
     onFlattenLayers: () => void;
+    onApplyCosplay: () => void;
+    cosplayOptions: CosplayOptions;
+    onCosplayOptionsChange: React.Dispatch<React.SetStateAction<CosplayOptions>>;
     onClose: () => void;
 }
 
@@ -185,6 +191,13 @@ const ToolOptions: React.FC<ToolOptionsProps> = (props) => {
           return <AestheticPanel onGenerate={props.onGenerateAesthetics} />;
         case 'cameraAngles':
           return <CameraAnglesPanel onGenerate={props.onGenerateCameraAngles} isLoading={isLoading} />;
+        case 'cosplay':
+            return <CosplayPanel
+                onApplyCosplay={props.onApplyCosplay}
+                isLoading={isLoading}
+                options={props.cosplayOptions}
+                onOptionsChange={props.onCosplayOptionsChange}
+            />;
         default:
           return <div className="p-4 text-center text-sm text-zinc-400">Select a tool from the toolbar to see its options.</div>;
     }

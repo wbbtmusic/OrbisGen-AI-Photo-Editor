@@ -4,7 +4,8 @@
 */
 
 import { GoogleGenAI, GenerateContentResponse, Modality, HarmCategory, HarmBlockThreshold, Type } from "@google/genai";
-import { AddPersonOptions, Theme, AspectRatio } from "../types";
+// FIX: Imported CosplayOptions to support the new Cosplay AI feature.
+import { AddPersonOptions, Theme, AspectRatio, CosplayOptions } from "../types";
 
 const getApiKey = (): string => {
     // AI Studio environment variable takes precedence.
@@ -990,6 +991,133 @@ Output: Return ONLY the final image from the new angle. Do not return text.`;
     return handleApiResponse(response, 'camera angle generation');
 };
 
+// FIX: Added missing Fashion AI functions.
+/**
+ * Generates an AI model image from a person's photo.
+ * @param personImage The original image file with the person.
+ * @returns A promise resolving to the data URL of the model image.
+ */
+export const generateModelImage = async (
+    personImage: File,
+): Promise<string> => {
+    console.log(`Starting model generation from person image.`);
+    const ai = new GoogleGenAI({ apiKey: getApiKey() });
+    
+    const personImagePart = await fileToPart(personImage);
+    const prompt = `You are an expert AI fashion model creator. Your task is to take the person from the provided image, isolate them, and place them on a clean, neutral, light gray studio background. The person's entire body should be visible in a standard standing pose.
+
+CRITICAL INSTRUCTIONS:
+1.  **PERFECTLY PRESERVE IDENTITY:** The person's face, body shape, and identity MUST be perfectly preserved.
+2.  **NEUTRAL BACKGROUND:** The background MUST be a simple, light gray, professional studio backdrop.
+3.  **STANDARD POSE:** The person should be in a full-body, standing A-pose or a similar neutral fashion model pose. If they are not in a standing pose, change their pose to be standing.
+4.  **PRESERVE ORIGINAL CLOTHING:** The person should be wearing the same clothes as in the original image.
+5.  **PHOTOREALISTIC RESULT:** The final image must be photorealistic and high-quality.
+6.  **PRESERVE DIMENSIONS:** The final image must have the exact same dimensions as the original image.
+
+Output: Return ONLY the final model image. Do not return text.`;
+    const textPart = { text: prompt };
+
+    const response: GenerateContentResponse = await ai.models.generateContent({
+        model: 'gemini-2.5-flash-image-preview',
+        contents: { parts: [personImagePart, textPart] },
+        config: {
+          safetySettings,
+          responseModalities: [Modality.IMAGE, Modality.TEXT],
+        },
+    });
+    
+    return handleApiResponse(response, 'model generation');
+};
+
+/**
+ * Applies a garment to a model image (virtual try-on).
+ * @param modelImage The image of the person/model.
+ * @param garmentImage The image of the garment.
+ * @returns A promise resolving to the data URL of the try-on image.
+ */
+export const generateVirtualTryOnImage = async (
+    modelImage: File,
+    garmentImage: File,
+): Promise<string> => {
+    console.log(`Starting virtual try-on.`);
+    const ai = new GoogleGenAI({ apiKey: getApiKey() });
+    
+    const modelImagePart = await fileToPart(modelImage);
+    const garmentImagePart = await fileToPart(garmentImage);
+    
+    const prompt = `You are an AI fashion stylist specializing in virtual try-on. You will be given a 'Model Image' of a person and a 'Garment Image' of a piece of clothing.
+
+**Your task is to realistically dress the person in the Model Image with the clothing from the Garment Image.**
+
+CRITICAL INSTRUCTIONS:
+1.  **IDENTIFY PERSON & GARMENT:** Accurately identify the main person in the 'Model Image' and the garment in the 'Garment Image'.
+2.  **APPLY GARMENT REALISTICALLY:** Redraw the person in the 'Model Image' wearing the garment. The clothing must be realistically adapted to the person's body shape, pose, and posture, including natural folds, wrinkles, and shadows.
+3.  **CRITICAL POSE & IDENTITY PRESERVATION:** You MUST perfectly preserve the pose, angle, facial expression, hair, and identity of the person in the 'Model Image'. Do not change them.
+4.  **CRITICAL BACKGROUND PRESERVATION:** The background of the 'Model Image' MUST be perfectly preserved.
+5.  **CRITICAL COLOR & LIGHTING INTEGRATION:** The new garment must be flawlessly re-lit to match the lighting, shadows, and color grading of the 'Model Image'.
+6.  **PRESERVE DIMENSIONS:** The final image MUST have the exact same dimensions as the 'Model Image'.
+
+Output: Return ONLY the final edited image. Do not return text.`;
+    const textPart = { text: prompt };
+
+    const response: GenerateContentResponse = await ai.models.generateContent({
+        model: 'gemini-2.5-flash-image-preview',
+        contents: { parts: [
+            { text: "Model Image:"},
+            modelImagePart,
+            { text: "Garment Image:"},
+            garmentImagePart,
+            textPart
+        ]},
+        config: {
+          safetySettings,
+          responseModalities: [Modality.IMAGE, Modality.TEXT],
+        },
+    });
+    
+    return handleApiResponse(response, 'virtual try-on');
+};
+
+/**
+ * Changes the pose of a person in an image based on a text prompt.
+ * @param personImage The image of the person.
+ * @param posePrompt The text description of the new pose.
+ * @returns A promise resolving to the data URL of the image with the new pose.
+ */
+export const generatePoseVariation = async (
+    personImage: File,
+    posePrompt: string,
+): Promise<string> => {
+    console.log(`Starting pose variation: ${posePrompt}`);
+    const ai = new GoogleGenAI({ apiKey: getApiKey() });
+    
+    const personImagePart = await fileToPart(personImage);
+    const prompt = `You are an expert AI character poser. Your task is to re-render the person in the provided image in a new pose as described by the user, while keeping everything else the same.
+
+New Pose Request: "${posePrompt}"
+
+CRITICAL INSTRUCTIONS:
+1.  **CRITICAL IDENTITY & CLOTHING PRESERVATION:** The recognizable facial features, ethnicity, identity, and the clothing of the person MUST be perfectly and absolutely preserved. The output should look like the same person in the same outfit, just in a different pose.
+2.  **CHANGE POSE:** You must change the person's body pose to be natural and convincing according to the request. The new pose must be anatomically correct and physically plausible.
+3.  **CRITICAL BACKGROUND PRESERVATION:** The background and environment of the scene MUST be perfectly and absolutely preserved.
+4.  **PHOTOREALISTIC RESULT:** The final image must be photorealistic.
+5.  **PRESERVE DIMENSIONS:** The final image MUST have the exact same dimensions as the original image.
+
+Output: Return ONLY the final image with the new pose. Do not return text.`;
+    const textPart = { text: prompt };
+
+    const response: GenerateContentResponse = await ai.models.generateContent({
+        model: 'gemini-2.5-flash-image-preview',
+        contents: { parts: [personImagePart, textPart] },
+        config: {
+          safetySettings,
+          responseModalities: [Modality.IMAGE, Modality.TEXT],
+        },
+    });
+    
+    return handleApiResponse(response, 'pose variation');
+};
+
 /**
  * Transforms an image to a different historical era.
  * @param originalImage The original image file.
@@ -1092,6 +1220,106 @@ Output: Return ONLY the final edited image. Do not return text.`;
     return handleApiResponse(response, 'texture projection');
 };
 
+/**
+ * Transforms a person in an image into a specified character (cosplay).
+ * @param originalImage The base image with a person.
+ * @param options The options for the cosplay generation.
+ * @returns A promise that resolves to the data URL of the edited image.
+ */
+export const generateCosplayImage = async (
+    originalImage: File,
+    options: CosplayOptions,
+): Promise<string> => {
+    console.log(`Starting 'Cosplay' with options:`, options);
+    const ai = new GoogleGenAI({ apiKey: getApiKey() });
+    
+    const originalImagePart = await fileToPart(originalImage);
+    const parts: any[] = [{ text: "Original Image:" }, originalImagePart];
+
+    let characterSourcePrompt = '';
+    if (options.characterRefImage) {
+        const characterRefPart = await fileToPart(options.characterRefImage);
+        parts.push({ text: "Reference Character Image:" }, characterRefPart);
+        characterSourcePrompt = `Use the character from the "Reference Character Image" as the target cosplay.`;
+        if (options.characterName) {
+            characterSourcePrompt += ` The character is known as "${options.characterName}".`;
+        }
+    } else {
+        characterSourcePrompt = `The target character is: "${options.characterName}".`;
+    }
+
+    let environmentPrompt = '';
+    switch (options.environmentOption) {
+        case 'auto':
+            environmentPrompt = `The background environment MUST be changed to match the character's original universe or a typical setting for them.`;
+            break;
+        case 'custom':
+            environmentPrompt = options.environmentPrompt
+                ? `The background environment MUST be changed to: "${options.environmentPrompt}".`
+                : `The original background MUST be preserved.`;
+            break;
+        case 'original':
+        default:
+            environmentPrompt = `The original background, lighting, and environment from the 'Original Image' MUST be perfectly preserved. The subject should appear as if they are wearing the costume in the original location.`;
+    }
+
+    const transferInstructions: string[] = [];
+    if (options.transferClothing) {
+        transferInstructions.push("The character's complete outfit/clothing MUST be transferred.");
+    }
+    if (options.transferHair) {
+        transferInstructions.push("The character's hair style and color MUST be transferred.");
+    }
+    if (options.transferEquipment) {
+        transferInstructions.push("Any of the character's signature equipment, accessories, or weapons MUST be transferred.");
+    }
+
+    const transferPrompt = transferInstructions.length > 0
+        ? `You will transfer the following elements from the character to the person: ${transferInstructions.join(' ')}`
+        : "You will not transfer any specific elements; just use the character as a general style guide.";
+
+    let posePrompt = '';
+    if (options.preserveOriginalPose) {
+        posePrompt = `CRITICAL POSE PRESERVATION: The person's exact pose from the 'Original Image' MUST be perfectly preserved. Do not change their posture, limb positions, or stance. This is the highest priority pose instruction and overrides all others.`;
+    } else if (options.copyPose && options.characterRefImage) {
+        posePrompt = `The person's pose MUST be changed to match the pose of the character in the "Reference Character Image". This is the highest priority pose instruction.`;
+    } else {
+        posePrompt = `The person in the original image must be redrawn in this pose: "${options.pose}".`;
+    }
+
+    const prompt = `You are an expert AI photo editor. Your task is to take a character's elements and realistically apply them to the person in the 'Original Image'. The result must be a photorealistic image of the original person in a high-quality cosplay.
+
+//-- CHARACTER & COSTUME --//
+Character: ${characterSourcePrompt}
+Transfer Elements: ${transferPrompt}
+
+//-- POSE & SCENE --//
+Pose: ${posePrompt}
+Environment: ${environmentPrompt}
+
+//-- CRITICAL RULES --//
+1.  **CORE TASK: CREATE A REALISTIC COSPLAY PHOTO.** Your ONLY job is to apply the selected character elements to the person from the 'Original Image'. The final image must look like a real-world photograph of a person in a physical cosplay outfit.
+2.  **PERFECT IDENTITY PRESERVATION:** The face, facial features, bone structure, ethnicity, and unique identity of the person in the 'Original Image' MUST be perfectly preserved. It must be the SAME PERSON, just in cosplay. Any change to their identity is a failure.
+3.  **REALISTIC ELEMENTS:** Transferred elements (costume, hair, equipment) must look like they're made of real materials (fabric, leather, metal, etc.) with realistic textures, folds, and lighting. They should not look like a drawing or a 3D render.
+4.  **SEAMLESS FIT & LIGHTING:** The transferred elements must fit the person's body and the new pose realistically. The lighting on all elements and the person MUST perfectly match the lighting of the final background environment.
+
+Output: You must return ONLY the final, photorealistic image. Do not output any text.`;
+
+
+    parts.push({ text: prompt });
+
+    const response: GenerateContentResponse = await ai.models.generateContent({
+        model: 'gemini-2.5-flash-image-preview',
+        contents: { parts: parts },
+        config: {
+          safetySettings,
+          responseModalities: [Modality.IMAGE, Modality.TEXT],
+        },
+    });
+    
+    return handleApiResponse(response, 'cosplay generation');
+};
+
 
 /**
  * Generates AI-powered suggestions for a given tool context.
@@ -1136,6 +1364,60 @@ Return the response as a JSON array of objects, where each object has a "name" a
         throw new Error('Could not get suggestions from the AI.');
     }
 };
+
+// FIX: Added missing function to generate AI themes.
+/**
+ * Generates an AI theme for the Aesthetic AI feature.
+ * @param themeIdea A string describing the desired theme.
+ * @returns A promise resolving to a theme object.
+ */
+export const createAiTheme = async (themeIdea: string): Promise<{ title: string; description: string; categories: string[] }> => {
+    console.log(`Generating AI theme for: ${themeIdea}`);
+    const ai = new GoogleGenAI({ apiKey: getApiKey() });
+    
+    const prompt = `You are a creative director. Based on the user's idea, generate a concept for an "Aesthetic AI" theme for a photo editor.
+
+User Idea: "${themeIdea}"
+
+Your task is to create:
+1.  A short, catchy, and cool "title" for the theme (e.g., "Cybernetic Noir", "Solarpunk Utopia", "Vampire Chic").
+2.  A one-sentence "description" that creatively explains the theme's aesthetic.
+3.  A list of exactly 6 distinct and evocative "categories" or sub-styles within that theme. These will be used as prompts, so they should be descriptive (e.g., for "Cybernetic Noir", a category could be "Rain-Slicked Alleyways" or "Holographic Detective").
+
+Return ONLY a single, valid JSON object with the keys "title", "description", and "categories" (which should be an array of 6 strings). Do not include any other text, explanations, or markdown formatting.`;
+
+    const response: GenerateContentResponse = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+        config: {
+            responseMimeType: 'application/json',
+            responseSchema: {
+                type: Type.OBJECT,
+                properties: {
+                    title: { type: Type.STRING },
+                    description: { type: Type.STRING },
+                    categories: {
+                        type: Type.ARRAY,
+                        items: { type: Type.STRING }
+                    },
+                }
+            }
+        },
+    });
+    
+    const jsonString = response.text.trim();
+    try {
+        const theme = JSON.parse(jsonString);
+        if (theme.title && theme.description && Array.isArray(theme.categories) && theme.categories.length > 0) {
+            return theme;
+        }
+        throw new Error('Invalid theme structure received from AI.');
+    } catch (e) {
+        console.error('Failed to parse AI theme response:', jsonString, e);
+        throw new Error('Could not create a theme from the AI.');
+    }
+};
+
 
 /**
  * Generates an image from a text prompt in the Design Studio.
@@ -1182,6 +1464,7 @@ export const compositePersonIntoScene = async (
     posePrompt: string,
 ): Promise<string> => {
     console.log('Compositing person into scene with options:', { personOptions, posePrompt });
+    // FIX: Corrected 'pose' to 'posePrompt' and added a return statement.
     const fullOptions: AddPersonOptions = {
         prompt: personOptions.prompt || '',
         personRefImage: personOptions.personRefImage || null,
@@ -1192,121 +1475,8 @@ export const compositePersonIntoScene = async (
         preserveMainSubjectPose: false, // Not applicable here
         style: 'realistic', // Prioritize realism for compositing
         posePrompt: posePrompt,
-        lightingMatch: 'match', // Always match lighting in Design Studio
+        lightingMatch: 'match'
     };
 
-    // We can reuse the main compositing function
     return generateCompositedPersonImage(sceneImage, fullOptions);
-};
-
-/**
- * Generates a new AI persona theme based on a user idea.
- * @param idea The user's idea for a theme.
- * @returns A promise that resolves to the new theme object.
- */
-export const createAiTheme = async (idea: string): Promise<{ title: string; description:string; categories: string[] }> => {
-    console.log(`Generating AI theme for: ${idea}`);
-    const ai = new GoogleGenAI({ apiKey: getApiKey() });
-    
-    const response: GenerateContentResponse = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: `You are a creative assistant. Based on the user's idea, generate a theme for an AI persona generator.
-The theme needs a "title", a short "description", and a list of 6-8 distinct "categories" (character types, styles, or sub-genres) within that theme.
-User Idea: "${idea}"
-Return the response as a single, valid JSON object with the keys "title", "description", and "categories". The categories should be an array of strings.`,
-        config: {
-            responseMimeType: 'application/json',
-            responseSchema: {
-                type: Type.OBJECT,
-                properties: {
-                    title: { type: Type.STRING },
-                    description: { type: Type.STRING },
-                    categories: {
-                        type: Type.ARRAY,
-                        items: { type: Type.STRING }
-                    }
-                }
-            }
-        },
-    });
-    
-    const jsonString = response.text.trim();
-    try {
-        const parsed = JSON.parse(jsonString);
-        if (parsed.title && parsed.description && Array.isArray(parsed.categories)) {
-            return parsed;
-        }
-        throw new Error('Invalid theme structure received from AI.');
-    } catch (e) {
-        console.error('Failed to parse AI theme response:', jsonString, e);
-        throw new Error('Could not generate a valid theme from the AI. Please try a different idea.');
-    }
-}
-
-// --- FASHION AI / VIRTUAL TRY-ON ---
-
-const dataUrlToPart = (dataUrl: string) => {
-    const arr = dataUrl.split(',');
-    if (arr.length < 2) throw new Error("Invalid data URL");
-    const mimeMatch = arr[0].match(/:(.*?);/);
-    if (!mimeMatch || !mimeMatch[1]) throw new Error("Could not parse MIME type from data URL");
-    return { mimeType: mimeMatch[1], data: arr[1] };
-}
-
-export const generateModelImage = async (userImage: File): Promise<string> => {
-    // Fix: Initialize the Gemini AI client.
-    const ai = new GoogleGenAI({ apiKey: getApiKey() });
-    const userImagePart = await fileToPart(userImage);
-    const prompt = "You are an expert fashion photographer AI. Transform the person in this image into a full-body fashion model photo suitable for an e-commerce website. The background must be a clean, neutral studio backdrop (light gray, #f0f0f0). The person should have a neutral, professional model expression. Preserve the person's identity, unique features, and body type, but place them in a standard, relaxed standing model pose. The final image must be photorealistic. Return ONLY the final image.";
-    const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-image-preview',
-        contents: { parts: [userImagePart, { text: prompt }] },
-        config: {
-            safetySettings,
-            responseModalities: [Modality.IMAGE, Modality.TEXT],
-        },
-    });
-    return handleApiResponse(response, "model generation");
-};
-
-export const generateVirtualTryOnImage = async (modelImageUrl: string, garmentImage: File): Promise<string> => {
-    // Fix: Initialize the Gemini AI client.
-    const ai = new GoogleGenAI({ apiKey: getApiKey() });
-    const modelImagePart = dataUrlToPart(modelImageUrl);
-    const garmentImagePart = await fileToPart(garmentImage);
-    const prompt = `You are an expert virtual try-on AI. You will be given a 'model image' and a 'garment image'. Your task is to create a new photorealistic image where the person from the 'model image' is wearing the clothing from the 'garment image'.
-
-**Crucial Rules:**
-1.  **Complete Garment Replacement:** You MUST completely REMOVE and REPLACE the clothing item worn by the person in the 'model image' with the new garment. No part of the original clothing (e.g., collars, sleeves, patterns) should be visible in the final image.
-2.  **Preserve the Model:** The person's face, hair, body shape, and pose from the 'model image' MUST remain unchanged.
-3.  **Preserve the Background:** The entire background from the 'model image' MUST be preserved perfectly.
-4.  **Apply the Garment:** Realistically fit the new garment onto the person. It should adapt to their pose with natural folds, shadows, and lighting consistent with the original scene.
-5.  **Output:** Return ONLY the final, edited image. Do not include any text.`;
-    const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-image-preview',
-        // Fix: Corrected the structure of the image part from the data URL.
-        contents: { parts: [{inlineData: modelImagePart}, garmentImagePart, { text: prompt }] },
-        config: {
-            safetySettings,
-            responseModalities: [Modality.IMAGE, Modality.TEXT],
-        },
-    });
-    return handleApiResponse(response, "virtual try-on");
-};
-
-export const generatePoseVariation = async (tryOnImageUrl: string, poseInstruction: string): Promise<string> => {
-    // Fix: Initialize the Gemini AI client.
-    const ai = new GoogleGenAI({ apiKey: getApiKey() });
-    const tryOnImagePart = dataUrlToPart(tryOnImageUrl);
-    const prompt = `You are an expert fashion photographer AI. Take this image and regenerate it from a different perspective. The person, clothing, and background style must remain identical. The new perspective should be: "${poseInstruction}". Return ONLY the final image.`;
-    const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-image-preview',
-        // Fix: Corrected the structure of the image part from the data URL.
-        contents: { parts: [{inlineData: tryOnImagePart}, { text: prompt }] },
-        config: {
-            safetySettings,
-            responseModalities: [Modality.IMAGE, Modality.TEXT],
-        },
-    });
-    return handleApiResponse(response, "pose variation");
 };

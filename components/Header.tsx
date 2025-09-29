@@ -119,7 +119,7 @@ const Header: React.FC<HeaderProps> = (props) => {
                 <button 
                     onClick={onRotate}
                     disabled={!hasImage}
-                    className="p-2 rounded-lg text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="p-2 rounded-lg text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed hidden sm:block"
                     aria-label="Rotate Clockwise"
                     title="Rotate 90°"
                 >
@@ -128,7 +128,7 @@ const Header: React.FC<HeaderProps> = (props) => {
                 <button 
                     onClick={onFlipHorizontal}
                     disabled={!hasImage}
-                    className="p-2 rounded-lg text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="p-2 rounded-lg text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed hidden sm:block"
                     aria-label="Flip Horizontal"
                     title="Flip Horizontal"
                 >

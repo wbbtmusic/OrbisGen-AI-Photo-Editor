@@ -31,6 +31,7 @@ export type Tool =
   | 'cameraAngles'
   | 'timeTraveler'
   | 'projector'
+  | 'cosplay'
   | 'none';
 
 export interface HistoryEntry {
@@ -49,6 +50,20 @@ export interface AddPersonOptions {
   style: 'normal' | 'realistic' | 'surprise';
   posePrompt: string;
   lightingMatch: 'match' | 'keep';
+}
+
+export interface CosplayOptions {
+  characterName: string;
+  characterRefImage: File | null;
+  pose: string;
+  environmentPrompt: string;
+  environmentOption: 'original' | 'auto' | 'custom';
+  numberOfOutputs: number;
+  transferHair: boolean;
+  transferClothing: boolean;
+  transferEquipment: boolean;
+  copyPose: boolean;
+  preserveOriginalPose: boolean;
 }
 
 export interface RecentProject {
@@ -123,6 +138,16 @@ export interface TimeTravelerState {
 }
 
 export type GeneratedTimeTravelerImage = GeneratedImage;
+
+// New types for Cosplay AI multi-generation
+export type CosplayStatus = 'setup' | 'generating' | 'results-shown';
+
+export interface CosplayState {
+  status: CosplayStatus;
+  options?: CosplayOptions;
+}
+
+export type GeneratedCosplayImage = GeneratedImage;
 
 
 // Types for new Fashion AI / Virtual Try-On tool

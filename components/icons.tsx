@@ -141,6 +141,14 @@ export const FaceFusionIcon: React.FC<{ className?: string }> = ({ className }) 
     </Icon>
 );
 
+export const CosplayIcon: React.FC<{ className?: string }> = ({ className }) => (
+    <Icon className={className}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5l-4.5 6h3l-4.5 6" />
+    </Icon>
+);
+
 export const PaletteIcon: React.FC<{ className?: string }> = ({ className }) => (
     <Icon className={className}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M4.098 19.902a3.75 3.75 0 005.304 0l6.401-6.402a3.75 3.75 0 00-.61-6.192l-5.314 5.314a2.25 2.25 0 01-3.182 0l-1.962-1.962a2.25 2.25 0 010-3.182l5.314-5.314a2.25 2.25 0 013.182 0L20.25 7.5M8.625 10.5h.008v.008h-.008V10.5z" />

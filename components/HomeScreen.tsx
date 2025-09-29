@@ -104,8 +104,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onFileSelect, onGoToDesignStudi
     document.getElementById('file-upload-homescreen')?.click();
   };
 
-  const handleTryAddPerson = () => {
-    setInitialTool('addPerson');
+  const handleTryCosplay = () => {
+    setInitialTool('cosplay');
     document.getElementById('file-upload-homescreen')?.click();
   };
 
@@ -146,15 +146,15 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onFileSelect, onGoToDesignStudi
                     </div>
                 </div>
 
-                {/* Featured Tool: Add Person Promo */}
+                {/* Featured Tool: Cosplay AI Promo */}
                 <div className="flex-1">
-                    <div className="group h-full relative rounded-xl p-6 bg-gradient-to-br from-teal-500 to-green-600 text-white shadow-2xl shadow-teal-500/30 transition-all duration-300 hover:shadow-green-500/50 flex flex-col justify-center">
-                        <h2 className="text-2xl font-bold mb-2">Featured Tool: Add Person</h2>
-                        <p className="text-sm text-teal-100 mb-4">
-                           Seamlessly add anyone to your photos. Describe them with text or use a reference image for a perfect match.
+                    <div className="group h-full relative rounded-xl p-6 bg-gradient-to-br from-purple-600 to-indigo-700 text-white shadow-2xl shadow-purple-500/30 transition-all duration-300 hover:shadow-indigo-500/50 flex flex-col justify-center">
+                        <h2 className="text-2xl font-bold mb-2">New Tool: Cosplay AI</h2>
+                        <p className="text-sm text-purple-100 mb-4">
+                           Transform into any character from anime, games, or movies. Describe a character or upload an image to start.
                         </p>
                         <button
-                            onClick={handleTryAddPerson}
+                            onClick={handleTryCosplay}
                             className="bg-white text-black font-semibold py-2 px-5 rounded-lg transition-all hover:bg-zinc-200 active:scale-95 group-hover:scale-105 self-start"
                         >
                             Try Now

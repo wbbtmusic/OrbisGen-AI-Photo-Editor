@@ -31,10 +31,11 @@ import {
   generatePoseVariation,
   generativeExpand,
   generateTimeTraveledImage,
-  generateProjectedTexture
+  generateProjectedTexture,
+  generateCosplayImage
 } from './services/geminiService';
 import { saveRecentProject, rotateImage, flipImageHorizontal } from './lib/utils';
-import { type Tool, type HistoryEntry, type AddPersonOptions, type AestheticState, type GeneratedImage, type Theme, type Layer, type CameraAnglesState, type GeneratedAngleImage, type OutfitLayer, type WardrobeItem, type TimeTravelerState, GeneratedTimeTravelerImage } from './types';
+import { type Tool, type HistoryEntry, type AddPersonOptions, type AestheticState, type GeneratedImage, type Theme, type Layer, type CameraAnglesState, type GeneratedAngleImage, type OutfitLayer, type WardrobeItem, type TimeTravelerState, GeneratedTimeTravelerImage, type CosplayOptions, type CosplayState, type GeneratedCosplayImage } from './types';
 import EditorCanvas, { type EditorCanvasRef } from './components/EditorCanvas';
 import Toolbar from './components/Toolbar';
 import Header from './components/Header';
@@ -49,6 +50,7 @@ import { dataURLtoFile, fileToDataURL } from './lib/utils';
 import { AdjustSlidersIcon } from './components/icons';
 import { defaultWardrobe } from './lib/wardrobe';
 import FashionPoseControls, { POSE_INSTRUCTIONS } from './components/FashionPoseControls';
+import { cosplayPoses } from './components/CosplayPanel';
 
 const loadingMessages = [
   'Painting pixels...',
@@ -71,6 +73,20 @@ const initialAddPersonOptions: AddPersonOptions = {
   style: 'normal',
   posePrompt: '',
   lightingMatch: 'match',
+};
+
+const initialCosplayOptions: CosplayOptions = {
+  characterName: '',
+  characterRefImage: null,
+  pose: cosplayPoses[0].prompt, // Set a default pose
+  environmentPrompt: '',
+  environmentOption: 'original',
+  numberOfOutputs: 1,
+  transferHair: true,
+  transferClothing: true,
+  transferEquipment: true,
+  copyPose: false,
+  preserveOriginalPose: false,
 };
 
 
@@ -118,10 +134,15 @@ const App: React.FC = () => {
     generationPrompts: [],
   });
   const [generatedTimeTravelerImages, setGeneratedTimeTravelerImages] = useState<Record<string, GeneratedTimeTravelerImage>>({});
+  
+  // Cosplay AI State
+  const [cosplayState, setCosplayState] = useState<CosplayState>({ status: 'setup' });
+  const [generatedCosplayImages, setGeneratedCosplayImages] = useState<Record<string, GeneratedCosplayImage>>({});
 
 
   // Tool Options State
   const [addPersonOptions, setAddPersonOptions] = useState<AddPersonOptions>(initialAddPersonOptions);
+  const [cosplayOptions, setCosplayOptions] = useState<CosplayOptions>(initialCosplayOptions);
   
   // Fashion AI State
   const [fashionState, setFashionState] = useState({
@@ -227,7 +248,10 @@ const App: React.FC = () => {
         setGeneratedAngleImages({});
         setTimeTravelerState({ status: 'selection', generationPrompts: [] });
         setGeneratedTimeTravelerImages({});
+        setCosplayState({ status: 'setup' });
+        setGeneratedCosplayImages({});
         setAddPersonOptions(initialAddPersonOptions);
+        setCosplayOptions(initialCosplayOptions);
         setFashionState({ modelImageUrl: null, outfitHistory: [], currentOutfitIndex: 0, currentPoseIndex: 0, wardrobe: defaultWardrobe, status: 'create_model' });
     } catch (err) {
         console.error("Error converting file to data URL:", err);
@@ -248,7 +272,10 @@ const App: React.FC = () => {
       setGeneratedAngleImages({});
       setTimeTravelerState({ status: 'selection', generationPrompts: [] });
       setGeneratedTimeTravelerImages({});
+      setCosplayState({ status: 'setup' });
+      setGeneratedCosplayImages({});
       setAddPersonOptions(initialAddPersonOptions);
+      setCosplayOptions(initialCosplayOptions);
       setFashionState({ modelImageUrl: null, outfitHistory: [], currentOutfitIndex: 0, currentPoseIndex: 0, wardrobe: defaultWardrobe, status: 'create_model' });
       setIsToolPanelVisible(false);
   };
@@ -265,19 +292,33 @@ const App: React.FC = () => {
 
   const handleRedo = () => {
     if (historyIndex < history.length - 1) {
-      setHistoryIndex(historyIndex - 1);
+      setHistoryIndex(historyIndex + 1);
     }
   };
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!currentImageUrl) return;
-    const link = document.createElement('a');
-    link.href = currentImageUrl;
     const filename = originalImageFile?.name.replace(/(\.[\w\d_-]+)$/i, '_edited$1') || 'edited-image.png';
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    try {
+        const response = await fetch(currentImageUrl);
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+    } catch (error) {
+        console.error("Download failed, using fallback:", error);
+        const link = document.createElement('a');
+        link.href = currentImageUrl;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
   };
   
   const handleOpenFile = () => {
@@ -313,6 +354,7 @@ const App: React.FC = () => {
       const newImageUrl = await task(currentImageFile, ...args);
       updateHistory(newImageUrl);
     } catch (err) {
+      // FIX: Argument of type 'unknown' is not assignable to parameter of type 'string'.
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
       setError(errorMessage);
     } finally {
@@ -332,6 +374,7 @@ const App: React.FC = () => {
       const newImageUrl = await task(currentImageUrl, ...args);
       updateHistory(newImageUrl);
     } catch (err) {
+      // FIX: Argument of type 'unknown' is not assignable to parameter of type 'string'.
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
       setError(errorMessage);
     } finally {
@@ -356,7 +399,6 @@ const App: React.FC = () => {
       }));
       updateHistory(generatedUrl);
     } catch (err) {
-      // FIX: The 'err' object in a catch block is of type 'unknown'. Check if it's an Error instance before using its message to avoid type errors.
       const errorMessage = err instanceof Error ? err.message : 'Failed to create model';
       setError(errorMessage);
     } finally {
@@ -378,7 +420,8 @@ const App: React.FC = () => {
     setIsLoading(true);
     setLoadingMessage(`Adding ${garmentInfo.name}...`);
     try {
-      const newImageUrl = await generateVirtualTryOnImage(currentImageUrl, garmentFile);
+      const currentImageFile = dataURLtoFile(currentImageUrl, 'current_model.png');
+      const newImageUrl = await generateVirtualTryOnImage(currentImageFile, garmentFile);
       const newLayer: OutfitLayer = { 
         garment: garmentInfo, 
         poseImages: { [POSE_INSTRUCTIONS[0]]: newImageUrl } 
@@ -396,7 +439,6 @@ const App: React.FC = () => {
         wardrobe: newWardrobe
       }));
     } catch (err) {
-      // FIX: The 'err' object in a catch block is of type 'unknown'. Check if it's an Error instance before using its message to avoid type errors.
       const errorMessage = err instanceof Error ? err.message : 'Failed to apply garment';
       setError(errorMessage);
     } finally {
@@ -428,7 +470,8 @@ const App: React.FC = () => {
     setFashionState(prev => ({ ...prev, currentPoseIndex: newIndex }));
     
     try {
-      const newImageUrl = await generatePoseVariation(baseImageForPoseChange, poseInstruction);
+      const baseImageFile = dataURLtoFile(baseImageForPoseChange, 'base_for_pose_change.png');
+      const newImageUrl = await generatePoseVariation(baseImageFile, poseInstruction);
       setFashionState(prev => {
         const newHistory = [...prev.outfitHistory];
         newHistory[prev.currentOutfitIndex].poseImages[poseInstruction] = newImageUrl;
@@ -436,7 +479,6 @@ const App: React.FC = () => {
       });
       updateHistory(newImageUrl);
     } catch (err) {
-      // Fix: The 'err' object in a catch block is of type 'unknown'. Check if it's an Error instance before using its message.
       const errorMessage = err instanceof Error ? err.message : 'Failed to change pose';
       setError(errorMessage);
       setFashionState(prev => ({ ...prev, currentPoseIndex: prevPoseIndex }));
@@ -569,6 +611,52 @@ const App: React.FC = () => {
     setIsLoading(false);
     setTimeTravelerState(prev => ({ ...prev, status: 'results-shown' }));
   }, [originalImageFile]);
+  
+  const handleGenerateCosplayImages = useCallback(async () => {
+    if (!originalImageFile || (!cosplayOptions.characterName.trim() && !cosplayOptions.characterRefImage)) {
+        setError("Please provide a character name or reference image.");
+        return;
+    }
+    
+    setIsToolPanelVisible(false);
+    setIsLoading(true);
+    setCosplayState({ status: 'generating', options: cosplayOptions });
+
+    const generationTasks = [];
+    const tempGeneratedImages: Record<string, GeneratedCosplayImage> = {};
+    
+    for (let i = 0; i < cosplayOptions.numberOfOutputs; i++) {
+        const key = `${cosplayOptions.characterName || 'Character'} ${i + 1}`;
+        tempGeneratedImages[key] = { status: 'pending' };
+    }
+    setGeneratedCosplayImages(tempGeneratedImages);
+    
+    const keys = Object.keys(tempGeneratedImages);
+    for (const key of keys) {
+        generationTasks.push(
+            (async () => {
+                try {
+                    const newImageUrl = await generateCosplayImage(originalImageFile, cosplayOptions);
+                    setGeneratedCosplayImages(prev => ({
+                        ...prev,
+                        [key]: { status: 'done', url: newImageUrl },
+                    }));
+                } catch (err) {
+                    const errorMessage = err instanceof Error ? err.message : 'Generation failed.';
+                    setGeneratedCosplayImages(prev => ({
+                        ...prev,
+                        [key]: { status: 'error', error: errorMessage },
+                    }));
+                }
+            })()
+        );
+    }
+  
+    await Promise.allSettled(generationTasks);
+    
+    setIsLoading(false);
+    setCosplayState(prev => ({ ...prev, status: 'results-shown' }));
+  }, [originalImageFile, cosplayOptions]);
 
 
   const handleUseGeneratedImageInEditor = (imageUrl: string) => {
@@ -586,6 +674,8 @@ const App: React.FC = () => {
       setGeneratedAngleImages({});
       setTimeTravelerState({ status: 'selection', generationPrompts: [] });
       setGeneratedTimeTravelerImages({});
+      setCosplayState({ status: 'setup' });
+      setGeneratedCosplayImages({});
       
       setActiveTool('adjust');
       setIsToolPanelVisible(true);
@@ -685,7 +775,6 @@ const App: React.FC = () => {
         runGenerativeTask(generateProjectedTexture, patternFile, selection, scale, strength, prompt);
     };
 
-
   // Layer Management
     const handleAddLayer = async (file: File) => {
         try {
@@ -708,7 +797,7 @@ const App: React.FC = () => {
     };
 
     const handleRemoveLayer = (id: string) => {
-        setLayers(prev => prev.filter(l => l.id === id));
+        setLayers(prev => prev.filter(l => l.id !== id));
     };
 
     const handleFlattenLayers = async () => {
@@ -830,8 +919,11 @@ const App: React.FC = () => {
   
   const isTimeTravelerResultsVisible = activeTool === 'timeTraveler' &&
     (timeTravelerState.status === 'generating' || timeTravelerState.status === 'results-shown');
+    
+  const isCosplayResultsVisible = activeTool === 'cosplay' &&
+    (cosplayState.status === 'generating' || cosplayState.status === 'results-shown');
 
-  const isGenerationViewVisible = isAestheticResultsVisible || isCameraAnglesResultsVisible || isTimeTravelerResultsVisible;
+  const isGenerationViewVisible = isAestheticResultsVisible || isCameraAnglesResultsVisible || isTimeTravelerResultsVisible || isCosplayResultsVisible;
   
   const canUndo = historyIndex > 0;
   const canRedo = historyIndex < history.length - 1;
@@ -870,6 +962,12 @@ const App: React.FC = () => {
     onApplyExpand: handleApplyExpand,
     onApplyProjection: handleApplyProjection,
     onGenerateTimeTravelerImages: handleGenerateTimeTravelerImages, timeTravelerState: timeTravelerState, setTimeTravelerState: setTimeTravelerState, generatedTimeTravelerImages: generatedTimeTravelerImages,
+    onGenerateCosplayImages: handleGenerateCosplayImages,
+    cosplayState: cosplayState, 
+    setCosplayState: setCosplayState, 
+    generatedCosplayImages: generatedCosplayImages,
+    cosplayOptions: cosplayOptions,
+    onCosplayOptionsChange: setCosplayOptions,
     loadingMessage: loadingMessage,
     error: error,
   };
@@ -898,7 +996,7 @@ const App: React.FC = () => {
         onSelectTool={handleToolSelect}
         onDeselect={handleDeselect}
       />
-      <main className="flex-1 flex flex-row overflow-hidden">
+      <main className="flex-1 flex flex-row overflow-hidden relative">
         {/* Toolbar (Left) */}
         <div className="flex-shrink-0">
           <Toolbar 
@@ -909,25 +1007,31 @@ const App: React.FC = () => {
         </div>
 
         {/* Center Content (Canvas) */}
-        <div className="flex-1 flex flex-col relative overflow-hidden bg-zinc-950">
+        <div className="flex-1 flex flex-col relative overflow-hidden bg-zinc-950 min-w-0">
           <div className="flex-1 relative flex items-center justify-center overflow-hidden">
             {isGenerationViewVisible ? (
               <AestheticResultsView 
                 title={
                   isAestheticResultsVisible ? 'Aesthetic AI' : 
-                  isCameraAnglesResultsVisible ? 'Camera Angles' : 'Time Traveler'
+                  isCameraAnglesResultsVisible ? 'Camera Angles' : 
+                  isTimeTravelerResultsVisible ? 'Time Traveler' : 'Cosplay AI'
                 }
                 subtitle={
                   isAestheticResultsVisible ? aestheticState.selectedTheme?.title : 
-                  isCameraAnglesResultsVisible ? 'Generated from new perspectives' : 'Images from across the timeline'
+                  isCameraAnglesResultsVisible ? 'Generated from new perspectives' : 
+                  isTimeTravelerResultsVisible ? 'Images from across the timeline' : 
+                  cosplayState.options?.characterName || 'Cosplay Generations'
                 }
                 generationCategories={
                   isAestheticResultsVisible ? aestheticState.generationCategories : 
-                  isCameraAnglesResultsVisible ? cameraAnglesState.generationPrompts.map(p => p.name) : timeTravelerState.generationPrompts.map(p => p.name)
+                  isCameraAnglesResultsVisible ? cameraAnglesState.generationPrompts.map(p => p.name) : 
+                  isTimeTravelerResultsVisible ? timeTravelerState.generationPrompts.map(p => p.name) :
+                  Object.keys(generatedCosplayImages)
                 }
                 generatedImages={
                   isAestheticResultsVisible ? generatedImages :
-                  isCameraAnglesResultsVisible ? generatedAngleImages : generatedTimeTravelerImages
+                  isCameraAnglesResultsVisible ? generatedAngleImages : 
+                  isTimeTravelerResultsVisible ? generatedTimeTravelerImages : generatedCosplayImages
                 }
                 onUseInEditor={handleUseGeneratedImageInEditor}
                 onBack={() => {
@@ -940,6 +1044,9 @@ const App: React.FC = () => {
                   } else if (isTimeTravelerResultsVisible) {
                     setTimeTravelerState({ status: 'selection', generationPrompts: [] });
                     setGeneratedTimeTravelerImages({});
+                  } else if (isCosplayResultsVisible) {
+                    setCosplayState({ status: 'setup' });
+                    setGeneratedCosplayImages({});
                   }
                   setIsToolPanelVisible(true);
                 }}
@@ -1041,29 +1148,24 @@ const App: React.FC = () => {
                         )}
                     </div>
                     <button onClick={() => setError(null)} className="p-1 rounded-full hover:bg-red-700">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>
                 </div>
             )}
-          </div>
+        </div>
         </div>
 
-        {/* Right Side Panel */}
+        {/* Tool Options (Right Panel) */}
         <AnimatePresence>
-          {!isGenerationViewVisible && isToolPanelVisible && (
+          {isToolPanelVisible && (
             <motion.div
-              className="flex-shrink-0 bg-zinc-900 overflow-hidden"
-              initial={{ width: 0 }}
-              animate={{ width: 320 }}
-              exit={{ width: 0 }}
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
               transition={{ type: 'tween', duration: 0.3, ease: 'easeInOut' }}
+              className="absolute top-0 right-0 w-96 h-full bg-zinc-900 z-40"
             >
-              <div className="w-80 h-full">
-                <ToolOptions 
-                  {...toolPanelProps}
-                  onClose={() => setIsToolPanelVisible(false)}
-                />
-              </div>
+                <ToolOptions {...toolPanelProps} onClose={() => setIsToolPanelVisible(false)} />
             </motion.div>
           )}
         </AnimatePresence>

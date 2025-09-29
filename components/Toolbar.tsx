@@ -15,7 +15,7 @@ import {
     PortraitIcon, FashionIcon, MakeupIcon, MakeupTransferIcon, 
     StyleTransferIcon, FaceSwapIcon, FaceFusionIcon, PaletteIcon, 
     ColorGradeIcon, StudioIcon, RandomizeIcon, ExpandIcon, TimeTravelerIcon,
-    ProjectorIcon
+    ProjectorIcon, CosplayIcon
 } from './icons';
 
 export interface ToolDefinition {
@@ -75,6 +75,7 @@ export const toolCategories: ToolCategory[] = [
     name: 'Face & Fashion',
     icon: PortraitFaceCategoryIcon,
     tools: [
+      { name: 'cosplay', icon: CosplayIcon, label: 'Cosplay AI' },
       { name: 'fashion', icon: FashionIcon, label: 'Fashion AI' },
       { name: 'makeup', icon: MakeupIcon, label: 'Makeup AI' },
       { name: 'makeupTransfer', icon: MakeupTransferIcon, label: 'Makeup Transfer' },
