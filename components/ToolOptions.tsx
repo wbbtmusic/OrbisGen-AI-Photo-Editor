@@ -34,6 +34,8 @@ import ExpandPanel from './ExpandPanel';
 import TimeTravelerPanel from './TimeTravelerPanel';
 import ProjectorPanel from './ProjectorPanel';
 import CosplayPanel from './CosplayPanel';
+import AlternateHistoryPanel from './AlternateHistoryPanel';
+import ShufflePanel from './ShufflePanel';
 
 
 export const toolDisplayName: Record<Tool, string> = {
@@ -63,6 +65,8 @@ export const toolDisplayName: Record<Tool, string> = {
   timeTraveler: 'Time Traveler',
   projector: 'Projector AI',
   cosplay: 'Cosplay AI',
+  alternateHistory: 'Alternate History',
+  shuffle: 'Shuffle AI',
   none: 'No Tool',
 };
 
@@ -85,7 +89,7 @@ export interface ToolOptionsProps {
     isCropping: boolean;
     onApplyAdjustment: (prompt: string) => void;
     onApplyFilter: (prompt: string) => void;
-    onApplyReplaceBackground: (prompt: string, harmonize: boolean) => void;
+    onApplyReplaceBackground: (prompt: string) => void;
     onApplyStudioEffect: (prompt: string) => void;
     onApplyText: (text: string, style: string) => void;
     onApplySky: (prompt: string) => void;
@@ -121,6 +125,8 @@ export interface ToolOptionsProps {
     onApplyRandomize: () => void;
     onApplyExpand: (aspectRatio: number, prompt: string) => void;
     onApplyProjection: (patternFile: File, scale: number, strength: number, prompt: string) => void;
+    onApplyAlternateHistory: (prompt: string) => void;
+    onApplyShuffle: (influenceImage: File) => void;
     originalImageFile: File | null;
     onGenerateAesthetics: (theme: Theme, categories:string[]) => void;
     onUseGeneratedImageInEditor: (imageUrl: string) => void;
@@ -234,6 +240,10 @@ const ToolOptions: React.FC<ToolOptionsProps> = (props) => {
                 options={props.cosplayOptions}
                 onOptionsChange={props.onCosplayOptionsChange}
             />;
+        case 'alternateHistory':
+            return <AlternateHistoryPanel onApply={props.onApplyAlternateHistory} isLoading={isLoading} hasSelection={hasSelection} />;
+        case 'shuffle':
+            return <ShufflePanel onApplyShuffle={props.onApplyShuffle} isLoading={isLoading} />;
         default:
           return <div className="p-4 text-center text-sm text-zinc-400">Select a tool from the toolbar to see its options.</div>;
     }

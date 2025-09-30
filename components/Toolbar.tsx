@@ -6,16 +6,16 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Tool } from '../types';
 import { 
-    // Category Icons
-    EssentialsCategoryIcon, ObjectRetouchCategoryIcon, ScenePerspectiveCategoryIcon, 
-    PortraitFaceCategoryIcon, StyleEffectsCategoryIcon, TrendsCategoryIcon,
+    // New Category Icons
+    TrendingCategoryIcon, EssentialsCategoryIcon, FramingViewCategoryIcon, RetouchInpaintingCategoryIcon, PortraitFaceCategoryIcon,
+    CharacterFashionCategoryIcon, ArtisticEffectsCategoryIcon, GenerativeWorldsCategoryIcon,
     // Tool Icons
     CropIcon, AdjustSlidersIcon, MagicWandIcon, LayersIcon, ReplaceBgIcon, 
     SkyIcon, InsertIcon, AddPersonIcon, TextGenIcon, CameraAnglesIcon, 
     PortraitIcon, FashionIcon, MakeupIcon, MakeupTransferIcon, 
     StyleTransferIcon, FaceSwapIcon, FaceFusionIcon, PaletteIcon, 
     ColorGradeIcon, StudioIcon, RandomizeIcon, ExpandIcon, TimeTravelerIcon,
-    ProjectorIcon, CosplayIcon
+    ProjectorIcon, CosplayIcon, AlternateHistoryIcon, ShuffleIcon
 } from './icons';
 
 export interface ToolDefinition {
@@ -32,69 +32,83 @@ export interface ToolCategory {
 
 export const toolCategories: ToolCategory[] = [
   {
-    name: 'Trends',
-    icon: TrendsCategoryIcon,
+    name: 'Trending',
+    icon: TrendingCategoryIcon,
     tools: [
       { name: 'aestheticAI', icon: PaletteIcon, label: 'Aesthetic AI' },
-      { name: 'addPerson', icon: AddPersonIcon, label: 'Add Person' },
-      { name: 'cameraAngles', icon: CameraAnglesIcon, label: 'Camera Angles' },
+      { name: 'cosplay', icon: CosplayIcon, label: 'Cosplay AI' },
       { name: 'fashion', icon: FashionIcon, label: 'Fashion AI' },
-      { name: 'replaceBg', icon: ReplaceBgIcon, label: 'Replace Background' },
-    ]
+      { name: 'addPerson', icon: AddPersonIcon, label: 'Add Person' },
+      { name: 'timeTraveler', icon: TimeTravelerIcon, label: 'Time Traveler' },
+    ],
   },
   {
     name: 'Essentials',
     icon: EssentialsCategoryIcon,
     tools: [
-      { name: 'crop', icon: CropIcon, label: 'Crop & Resize' },
-      { name: 'generativeExpand', icon: ExpandIcon, label: 'Expand Canvas' },
       { name: 'adjust', icon: AdjustSlidersIcon, label: 'Adjustments' },
       { name: 'layers', icon: LayersIcon, label: 'Layers' },
     ],
   },
   {
-    name: 'Retouch & Replace',
-    icon: ObjectRetouchCategoryIcon,
+    name: 'Framing & View',
+    icon: FramingViewCategoryIcon,
+    tools: [
+      { name: 'crop', icon: CropIcon, label: 'Crop & Resize' },
+      { name: 'generativeExpand', icon: ExpandIcon, label: 'Expand Canvas' },
+      { name: 'cameraAngles', icon: CameraAnglesIcon, label: 'Camera Angles' },
+    ],
+  },
+  {
+    name: 'Retouch & Inpainting',
+    icon: RetouchInpaintingCategoryIcon,
     tools: [
       { name: 'retouch', icon: MagicWandIcon, label: 'Retouch' },
-      { name: 'portrait', icon: PortraitIcon, label: 'Portrait AI' },
-      { name: 'replaceBg', icon: ReplaceBgIcon, label: 'Replace Background' },
       { name: 'sky', icon: SkyIcon, label: 'Replace Sky' },
-    ],
-  },
-  {
-    name: 'Generative Objects',
-    icon: ScenePerspectiveCategoryIcon,
-    tools: [
+      { name: 'replaceBg', icon: ReplaceBgIcon, label: 'Replace Background' },
       { name: 'insert', icon: InsertIcon, label: 'Insert Object' },
-      { name: 'addPerson', icon: AddPersonIcon, label: 'Add Person' },
-      { name: 'textGen', icon: TextGenIcon, label: 'Add Text' },
     ],
   },
   {
-    name: 'Face & Fashion',
+    name: 'Portrait & Face',
     icon: PortraitFaceCategoryIcon,
     tools: [
-      { name: 'cosplay', icon: CosplayIcon, label: 'Cosplay AI' },
-      { name: 'fashion', icon: FashionIcon, label: 'Fashion AI' },
+      { name: 'portrait', icon: PortraitIcon, label: 'Portrait AI' },
       { name: 'makeup', icon: MakeupIcon, label: 'Makeup AI' },
       { name: 'makeupTransfer', icon: MakeupTransferIcon, label: 'Makeup Transfer' },
-      { name: 'clothingTransfer', icon: StyleTransferIcon, label: 'Clothing Transfer' },
       { name: 'faceSwap', icon: FaceSwapIcon, label: 'Face Swap' },
       { name: 'faceFusion', icon: FaceFusionIcon, label: 'Face Fusion' },
     ],
   },
   {
-    name: 'AI Effects & Styles',
-    icon: StyleEffectsCategoryIcon,
+    name: 'Character & Fashion',
+    icon: CharacterFashionCategoryIcon,
     tools: [
-      { name: 'filters', icon: StyleEffectsCategoryIcon, label: 'Artistic Filters' },
+      { name: 'cosplay', icon: CosplayIcon, label: 'Cosplay AI' },
+      { name: 'fashion', icon: FashionIcon, label: 'Fashion AI' },
+      { name: 'clothingTransfer', icon: StyleTransferIcon, label: 'Clothing Transfer' },
+    ],
+  },
+  {
+    name: 'Artistic Effects',
+    icon: ArtisticEffectsCategoryIcon,
+    tools: [
+      { name: 'filters', icon: PaletteIcon, label: 'Artistic Filters' },
       { name: 'colorGrade', icon: ColorGradeIcon, label: 'Color Grade' },
-      { name: 'projector', icon: ProjectorIcon, label: 'Projector AI' },
-      { name: 'studio', icon: StudioIcon, label: 'Studio AI' },
-      { name: 'timeTraveler', icon: TimeTravelerIcon, label: 'Time Traveler' },
       { name: 'aestheticAI', icon: PaletteIcon, label: 'Aesthetic AI' },
-      { name: 'cameraAngles', icon: CameraAnglesIcon, label: 'Camera Angles' },
+    ],
+  },
+  {
+    name: 'Generative Worlds',
+    icon: GenerativeWorldsCategoryIcon,
+    tools: [
+      { name: 'studio', icon: StudioIcon, label: 'Studio AI' },
+      { name: 'projector', icon: ProjectorIcon, label: 'Projector AI' },
+      { name: 'addPerson', icon: AddPersonIcon, label: 'Add Person' },
+      { name: 'textGen', icon: TextGenIcon, label: 'Add Text' },
+      { name: 'timeTraveler', icon: TimeTravelerIcon, label: 'Time Traveler' },
+      { name: 'alternateHistory', icon: AlternateHistoryIcon, label: 'Alternate History' },
+      { name: 'shuffle', icon: ShuffleIcon, label: 'Shuffle AI' },
       { name: 'randomize', icon: RandomizeIcon, label: 'Randomize' },
     ],
   },
@@ -108,7 +122,7 @@ interface ToolbarProps {
 }
 
 const Toolbar: React.FC<ToolbarProps> = ({ activeTool, setActiveTool, disabled }) => {
-    const [openCategoryIndex, setOpenCategoryIndex] = useState<number | null>(null);
+    const [openCategoryIndex, setOpenCategoryIndex] = useState<number | null>(0);
     const navRef = useRef<HTMLElement>(null);
 
     const handleCategoryClick = (index: number) => {

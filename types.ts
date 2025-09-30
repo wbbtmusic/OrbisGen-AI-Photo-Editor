@@ -32,6 +32,8 @@ export type Tool =
   | 'timeTraveler'
   | 'projector'
   | 'cosplay'
+  | 'alternateHistory'
+  | 'shuffle'
   | 'none';
 
 export interface HistoryEntry {

@@ -32,7 +32,9 @@ import {
   generativeExpand,
   generateTimeTraveledImage,
   generateProjectedTexture,
-  generateCosplayImage
+  generateCosplayImage,
+  generateAlternateHistoryImage,
+  generateShuffledImage
 } from './services/geminiService';
 import { saveRecentProject, rotateImage, flipImageHorizontal } from './lib/utils';
 import { type Tool, type HistoryEntry, type AddPersonOptions, type AestheticState, type GeneratedImage, type Theme, type Layer, type CameraAnglesState, type GeneratedAngleImage, type OutfitLayer, type WardrobeItem, type TimeTravelerState, GeneratedTimeTravelerImage, type CosplayOptions, type CosplayState, type GeneratedCosplayImage } from './types';
@@ -354,7 +356,7 @@ const App: React.FC = () => {
       const newImageUrl = await task(currentImageFile, ...args);
       updateHistory(newImageUrl);
     } catch (err) {
-      // FIX: Argument of type 'unknown' is not assignable to parameter of type 'string'.
+      // FIX: Correctly handle unknown error from catch block by checking its type.
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
       setError(errorMessage);
     } finally {
@@ -374,7 +376,7 @@ const App: React.FC = () => {
       const newImageUrl = await task(currentImageUrl, ...args);
       updateHistory(newImageUrl);
     } catch (err) {
-      // FIX: Argument of type 'unknown' is not assignable to parameter of type 'string'.
+      // FIX: Correctly handle unknown error from catch block by checking its type.
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
       setError(errorMessage);
     } finally {
@@ -697,11 +699,11 @@ const App: React.FC = () => {
     generator: (image: File, prompt: string, selection?: PixelCrop) => Promise<string>,
     prompt: string
   ) => {
-    if (!selection && ['retouch', 'portrait', 'textGen', 'insert', 'projector'].includes(activeTool)) {
+    if (!selection && ['retouch', 'portrait', 'textGen', 'insert', 'projector', 'alternateHistory'].includes(activeTool)) {
       setError("Please make a selection on the image first.");
       return;
     }
-    const args = ['retouch', 'portrait', 'textGen', 'insert', 'projector'].includes(activeTool) ? [prompt, selection] : [prompt];
+    const args = ['retouch', 'portrait', 'textGen', 'insert', 'projector', 'alternateHistory'].includes(activeTool) ? [prompt, selection] : [prompt];
     runGenerativeTask(generator as any, ...args);
   };
 
@@ -934,7 +936,7 @@ const App: React.FC = () => {
     onApplyCrop: handleApplyCrop, onSetAspect: setAspect, isCropping: !!selection && selection.width > 0,
     onApplyAdjustment: (prompt: string) => runGenerativeTask(generateAdjustedImage, prompt),
     onApplyFilter: (prompt: string) => runGenerativeTask(generateFilteredImage, prompt),
-    onApplyReplaceBackground: (prompt: string, harmonize: boolean) => runGenerativeTask(generateReplacedBackgroundImage, prompt, harmonize),
+    onApplyReplaceBackground: (prompt: string) => runGenerativeTask(generateReplacedBackgroundImage, prompt),
     onApplyStudioEffect: (prompt: string) => runGenerativeTask(generateStudioEffect, prompt),
     onApplyText: (text: string, style: string) => runGenerativeTask(generateInscribedText, text, style, selection),
     onApplySky: (prompt: string) => runGenerativeTask(generateReplacedSky, prompt),
@@ -962,6 +964,8 @@ const App: React.FC = () => {
     onApplyExpand: handleApplyExpand,
     onApplyProjection: handleApplyProjection,
     onGenerateTimeTravelerImages: handleGenerateTimeTravelerImages, timeTravelerState: timeTravelerState, setTimeTravelerState: setTimeTravelerState, generatedTimeTravelerImages: generatedTimeTravelerImages,
+    onApplyAlternateHistory: (prompt: string) => handleApplyGenerativeAction(generateAlternateHistoryImage, prompt),
+    onApplyShuffle: (influenceImage: File) => runGenerativeTask(generateShuffledImage, influenceImage),
     onGenerateCosplayImages: handleGenerateCosplayImages,
     cosplayState: cosplayState, 
     setCosplayState: setCosplayState, 
@@ -1148,7 +1152,7 @@ const App: React.FC = () => {
                         )}
                     </div>
                     <button onClick={() => setError(null)} className="p-1 rounded-full hover:bg-red-700">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>
                 </div>
             )}

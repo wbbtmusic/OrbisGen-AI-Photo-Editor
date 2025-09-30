@@ -66,6 +66,10 @@ export const toolDisplayName: Record<Tool, string> = {
   projector: 'Projector AI',
   // FIX: Added missing 'cosplay' property to satisfy the `Record<Tool, string>` type.
   cosplay: 'Cosplay AI',
+  // Fix: Add missing 'alternateHistory' property to satisfy the Record<Tool, string> type.
+  alternateHistory: 'Alternate History',
+  // FIX: Add missing 'shuffle' property to satisfy the Record<Tool, string> type.
+  shuffle: 'Shuffle AI',
   none: 'No Tool',
 };
 

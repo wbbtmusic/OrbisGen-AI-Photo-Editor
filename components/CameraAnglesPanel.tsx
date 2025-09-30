@@ -84,16 +84,21 @@ const presetCategories: PresetCategory[] = [
         ]
     },
     {
-        title: 'Artistik',
+        title: 'Artistic Poses',
         presets: [
-            { name: 'Shy Peek', prompt: 'Change the subject\'s pose to kneeling on a soft surface, partially covering their face with one hand in a shy or playful \'peek-a-boo\' gesture. Preserve the person\'s identity and the scene\'s style.' },
-            { name: 'Playful Agent', prompt: 'Change the subject\'s pose to sitting playfully on the edge of a surface, turning towards the camera with a confident expression and making a \'finger gun\' gesture. Preserve the person\'s identity and the scene\'s style.' },
+            { name: 'Sofa Allure', prompt: 'Change the subject\'s pose to be sitting on a sofa, leaning back slightly on one arm. Their legs should be elegantly arranged—one bent toward the body and one more extended—with their gaze directed confidently at the camera. Preserve their identity and the scene\'s style.' },
             { name: 'Lounging Gaze', prompt: 'Change the subject\'s pose to lounging casually on their side on a sofa or floor, propped up by one elbow, looking directly at the camera with a relaxed expression. Preserve their identity and the scene\'s style.' },
             { name: 'Over the Shoulder', prompt: 'Pose the subject looking back over their shoulder at the camera with a soft, inviting expression. Preserve their identity and the scene\'s style.' },
             { name: 'Sitting Pretty', prompt: 'Change the subject\'s pose to sitting on the floor with knees drawn up together, wrapping their arms around their legs. Preserve the person\'s identity and the scene\'s style.' },
             { name: 'Delicate Touch', prompt: 'A close-up shot focusing on the subject\'s face, with their hand gently touching their own cheek or lip in a delicate, thoughtful manner. Preserve their identity.' },
             { name: 'Graceful Arch', prompt: 'Change the subject\'s pose to a graceful back arch while standing or sitting, creating an elegant and artistic silhouette. Preserve the person\'s identity and the scene\'s style.' },
-            { name: 'Playful Pout', prompt: 'A close-up shot of the subject with a playful, slightly pouty expression, looking directly at the camera. Preserve their identity.' },
+            { name: 'Knee-Up Pose', prompt: 'Change the subject\'s pose to sitting on a couch or floor with one knee drawn up towards their chest and the other leg extended to the side. They should be looking directly at the camera with a confident expression. Preserve their identity and the scene\'s style.' },
+            { name: 'Gentle Kneel', prompt: 'Change the subject\'s pose to kneeling on a soft surface like a bed or rug, with a slight, graceful arch in their back, looking at the camera. The pose should be artistic and elegant. Preserve their identity and the scene\'s style.' },
+            { name: 'Floor Gaze', prompt: 'Change the subject\'s pose to sitting on the floor, leaning back on their hands with legs stretched out or casually bent, looking up towards the camera. Preserve their identity and the scene\'s style.' },
+            { name: 'Window Light', prompt: 'Pose the subject sitting near a large window, illuminated by soft, natural light, with a contemplative and serene expression. Preserve their identity and the scene\'s style.' },
+            { name: 'Bed Lounge', prompt: 'Change the subject\'s pose to lounging casually on a bed, propped up by pillows, with a relaxed and inviting look towards the camera. Preserve their identity and the scene\'s style.' },
+            { name: 'Cross-Legged Repose', prompt: 'Change the subject\'s pose to sitting on the floor with their legs crossed. They should be leaning back on one hand, creating a gentle twist in their torso, and looking over their shoulder at the camera. Preserve their identity and the scene\'s style.' },
+            { name: 'Bedside Poise', prompt: 'Change the subject\'s pose to sitting on the edge of a bed, leaning slightly forward with one hand resting on the mattress. Their legs should be crossed, and they should be looking at the camera with a soft expression. Preserve their identity and the scene\'s style.' },
         ]
     }
 ];

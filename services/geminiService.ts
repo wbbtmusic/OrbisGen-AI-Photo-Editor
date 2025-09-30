@@ -1300,7 +1300,7 @@ Environment: ${environmentPrompt}
 //-- CRITICAL RULES --//
 1.  **CORE TASK: CREATE A REALISTIC COSPLAY PHOTO.** Your ONLY job is to apply the selected character elements to the person from the 'Original Image'. The final image must look like a real-world photograph of a person in a physical cosplay outfit.
 2.  **PERFECT IDENTITY PRESERVATION:** The face, facial features, bone structure, ethnicity, and unique identity of the person in the 'Original Image' MUST be perfectly preserved. It must be the SAME PERSON, just in cosplay. Any change to their identity is a failure.
-3.  **REALISTIC ELEMENTS:** Transferred elements (costume, hair, equipment) must look like they're made of real materials (fabric, leather, metal, etc.) with realistic textures, folds, and lighting. They should not look like a drawing or a 3D render.
+3.  **REALISTIC ELEMENTS:** Transferred elements (costume, hair, equipment) must look like real materials (fabric, leather, metal, etc.) with realistic textures, folds, and lighting. They should not look like a drawing or a 3D render.
 4.  **SEAMLESS FIT & LIGHTING:** The transferred elements must fit the person's body and the new pose realistically. The lighting on all elements and the person MUST perfectly match the lighting of the final background environment.
 
 Output: You must return ONLY the final, photorealistic image. Do not output any text.`;
@@ -1318,6 +1318,116 @@ Output: You must return ONLY the final, photorealistic image. Do not output any 
     });
     
     return handleApiResponse(response, 'cosplay generation');
+};
+
+/**
+ * Replaces an object in a selected area with a new one and adjusts the context.
+ * @param originalImage The original image file.
+ * @param prompt The description of what the object should be replaced with.
+ * @param selection The location of the object to replace.
+ * @returns A promise that resolves to the data URL of the edited image.
+ */
+export const generateAlternateHistoryImage = async (
+    originalImage: File,
+    prompt: string,
+    selection: { x: number; y: number, width: number, height: number }
+): Promise<string> => {
+    console.log(`Generating alternate history for prompt "${prompt}" within`, selection);
+    const ai = new GoogleGenAI({ apiKey: getApiKey() });
+    
+    const originalImagePart = await fileToPart(originalImage);
+    const textPart = { text: `You are an expert digital artist specializing in 'what-if' scenarios and alternate histories. Your task is to perform a contextual replacement within a specified bounding box on the provided image.
+
+User Request: "What if this was ${prompt}?"
+Location: The object to replace is within the bounding box defined by top-left corner (x: ${selection.x}, y: ${selection.y}) and dimensions (width: ${selection.width}, height: ${selection.height}).
+
+CRITICAL INSTRUCTIONS:
+1.  **Identify & Replace:** First, identify the primary object within the user-specified selection box. Then, completely replace that object with a new one based on the user's prompt: "${prompt}".
+2.  **CRITICAL CONTEXTUAL BLENDING:** After replacing the object, you MUST subtly and realistically alter the immediate surroundings to be consistent with the new object. For example, if a modern car on asphalt is replaced with a horse-drawn carriage, the ground beneath and around it might become a dirt or cobblestone road. If a candle is replaced with a sci-fi glowing orb, the light and color it casts on nearby surfaces MUST change.
+3.  **SEAMLESS INTEGRATION:** The new object and the altered surroundings must blend seamlessly with the rest of the image. The result must be photorealistic and indistinguishable from a real photograph.
+4.  **Preserve Rest of Image:** The rest of the image outside the immediate area of the change must be perfectly preserved.
+5.  **Maintain Scene Integrity:** Preserve the overall composition, lighting style, and identity of any people in the photo who are not part of the replacement.
+6.  **Preserve Dimensions:** The final image MUST have the exact same dimensions as the original image.
+
+Output: Return ONLY the final edited image. Do not return text.` };
+
+    const response: GenerateContentResponse = await ai.models.generateContent({
+        model: 'gemini-2.5-flash-image-preview',
+        contents: { parts: [originalImagePart, textPart] },
+        config: {
+          safetySettings,
+          responseModalities: [Modality.IMAGE, Modality.TEXT],
+        },
+    });
+    
+    return handleApiResponse(response, 'alternate history generation');
+};
+
+/**
+ * Creatively shuffles/fuses two images together.
+ * @param originalImage The base image with the main subject and composition.
+ * @param influenceImage The image providing the style, mood, and aesthetic.
+ * @returns A promise that resolves to the data URL of the shuffled image.
+ */
+export const generateShuffledImage = async (
+    originalImage: File,
+    influenceImage: File,
+): Promise<string> => {
+    console.log(`Starting creative shuffle with influence image.`);
+    const ai = new GoogleGenAI({ apiKey: getApiKey() });
+    
+    const originalImagePart = await fileToPart(originalImage);
+    const influenceImagePart = await fileToPart(influenceImage);
+    
+    const prompt = `You are a master visual compositor and world-builder AI, an expert at transplanting subjects into new realities. You will receive an 'Original Image' containing a subject and an 'Influence Image' defining a new world.
+
+**CORE TASK: Your mission is to extract the primary subject from the 'Original Image' and completely re-render them within the environment, atmosphere, and artistic style of the 'Influence Image'. The result should not be a simple blend or style transfer, but a believable, cohesive new scene where the original subject has been fully integrated.**
+
+//-- YOUR STEP-BY-STEP PROCESS --//
+
+1.  **ANALYZE 'ORIGINAL IMAGE':**
+    *   Accurately identify and isolate the primary subject(s).
+    *   Lock in their core identity: recognizable facial features, ethnicity, and bone structure.
+    *   Lock in their core pose, expression, and position within the frame.
+
+2.  **ANALYZE 'INFLUENCE IMAGE':**
+    *   Deconstruct the "World Rules" of this image. What is the environment? The time of day?
+    *   Determine the **Lighting Physics**: Identify all light sources, their direction, color, and intensity. Note the quality of shadows (hard vs. soft).
+    *   Determine the **Atmosphere**: Is there fog, rain, dust, lens flare, or any other environmental effect?
+    *   Determine the **Artistic Style**: Is it photorealistic, an oil painting, watercolor, cyberpunk digital art, etc.? Analyze its textures, color palette, and rendering technique.
+
+3.  **TRANSPLANT & RE-RENDER (THE CRITICAL STEP):**
+    *   Place the subject from the 'Original Image' into the world of the 'Influence Image'.
+    *   **Re-Light the Subject:** The subject MUST be completely re-lit according to the 'Influence Image's' lighting physics. They must cast new, physically accurate shadows onto the new environment. Their surfaces must receive colored bounce light and reflections from their new surroundings. (e.g., a subject in a forest must have dappled green light on them).
+    *   **Apply Atmosphere:** The subject must be realistically affected by the new atmosphere. If it's a foggy scene, parts of the subject must be obscured by fog.
+    *   **Unify the Style:** The subject themselves MUST be rendered in the exact same artistic style as the 'Influence Image'. If the influence is a painting, the subject's form should be described with the same brushwork and texture, while remaining perfectly recognizable.
+
+//-- NON-NEGOTIABLE CRITICAL RULES --//
+
+1.  **IDENTITY PRESERVATION IS PARAMOUNT:** The final image must depict the exact same person from the 'Original Image', without any change to their facial structure, ethnicity, or defining features. This is the most important rule.
+2.  **POSE PRESERVATION:** The subject's core pose and facial expression from the 'Original Image' must be maintained.
+3.  **COHESIVE REALITY, NOT A COLLAGE:** The final output must be a single, unified artwork. It should look like the subject was originally photographed or painted in the new scene, not digitally added later.
+4.  **Preserve Dimensions:** The final image MUST have the exact same dimensions as the 'Original Image'.
+
+Output: Return ONLY the final, masterfully composited image. Do not return text.`;
+    const textPart = { text: prompt };
+
+    const response: GenerateContentResponse = await ai.models.generateContent({
+        model: 'gemini-2.5-flash-image-preview',
+        contents: { parts: [
+            { text: "Original Image:"},
+            originalImagePart,
+            { text: "Influence Image:"},
+            influenceImagePart,
+            textPart
+        ]},
+        config: {
+          safetySettings,
+          responseModalities: [Modality.IMAGE, Modality.TEXT],
+        },
+    });
+    
+    return handleApiResponse(response, 'image shuffle');
 };
 
 
