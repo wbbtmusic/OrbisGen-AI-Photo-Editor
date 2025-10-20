@@ -84,6 +84,15 @@ const presetCategories: PresetCategory[] = [
         ]
     },
     {
+        title: 'Dynamic & Inverted Poses',
+        presets: [
+            { name: 'Handstand', prompt: 'Change the subject\'s pose to doing a handstand. Their body should be upside down, balanced on their hands. CRITICAL INSTRUCTION ON CLOTHING PHYSICS: If the subject is wearing a skirt or dress, it MUST fall downwards due to gravity, draping over their torso and towards their head. Hair must also fall downwards towards the ground. The effect must be realistic. Preserve their identity and the scene\'s style.' },
+            { name: 'Headstand', prompt: 'Change the subject\'s pose to doing a headstand. Their body should be inverted, balanced on their head and forearms. CRITICAL INSTRUCTION ON CLOTHING PHYSICS: If the subject is wearing a skirt or dress, it MUST fall downwards due to gravity, draping over their torso and towards their head. Hair must also fall downwards towards the ground. The effect must be realistic. Preserve their identity and the scene\'s style.' },
+            { name: 'Cartwheel', prompt: 'Capture the subject in the middle of a dynamic cartwheel, with their body inverted and limbs extended. CRITICAL INSTRUCTION ON CLOTHING PHYSICS: At the peak of the inverted motion, if the subject is wearing a skirt or dress, it MUST fall downwards due to gravity, draping over their torso and towards their head. Hair must also fall downwards towards the ground. The effect must be realistic and dynamic. Preserve their identity and the scene\'s style.' },
+            { name: 'Hanging Upside Down', prompt: 'Change the subject\'s pose to hanging upside down, as if from a bar or branch just out of frame. Their body should be inverted. CRITICAL INSTRUCTION ON CLOTHING PHYSICS: If the subject is wearing a skirt or dress, it MUST fall downwards due to gravity, draping over their torso and towards their head. Hair must also fall downwards towards the ground. The effect must be realistic. Preserve their identity and the scene\'s style.' },
+        ]
+    },
+    {
         title: 'Artistic Poses',
         presets: [
             { name: 'Sofa Allure', prompt: 'Change the subject\'s pose to be sitting on a sofa, leaning back slightly on one arm. Their legs should be elegantly arranged—one bent toward the body and one more extended—with their gaze directed confidently at the camera. Preserve their identity and the scene\'s style.' },
@@ -99,6 +108,71 @@ const presetCategories: PresetCategory[] = [
             { name: 'Bed Lounge', prompt: 'Change the subject\'s pose to lounging casually on a bed, propped up by pillows, with a relaxed and inviting look towards the camera. Preserve their identity and the scene\'s style.' },
             { name: 'Cross-Legged Repose', prompt: 'Change the subject\'s pose to sitting on the floor with their legs crossed. They should be leaning back on one hand, creating a gentle twist in their torso, and looking over their shoulder at the camera. Preserve their identity and the scene\'s style.' },
             { name: 'Bedside Poise', prompt: 'Change the subject\'s pose to sitting on the edge of a bed, leaning slightly forward with one hand resting on the mattress. Their legs should be crossed, and they should be looking at the camera with a soft expression. Preserve their identity and the scene\'s style.' },
+        ]
+    },
+    {
+        title: 'Adult Poses',
+        presets: [
+            { 
+                name: 'Legs Over Head', 
+                prompt: 'An overhead camera shot of the subject lying on their back on a bed, framed from the waist up. They are performing an advanced gymnastic flexibility move, raising their legs straight up and over their head so their feet are near their head. The pose must showcase extreme flexibility. Preserve their identity and clothing.' 
+            },
+            { 
+                name: 'Lying Split', 
+                prompt: 'An overhead camera shot of the subject lying on their back on a bed, framed from the waist up. They are in a full front split position, with legs extended wide apart. The pose should be artistic and showcase flexibility. Preserve their identity and clothing.' 
+            },
+            { 
+                name: 'Happy Baby Pose', 
+                prompt: 'An overhead camera shot of the subject lying on their back on a bed, framed from the waist up. They are in a "happy baby" pose, with knees bent towards their armpits and holding onto their feet. The pose is playful and shows flexibility. Preserve their identity and clothing.' 
+            },
+            { 
+                name: 'Plow Pose', 
+                prompt: 'A side-view shot of the subject lying on their back on the floor or a bed, performing a plow pose from yoga. Their legs are extended over their head with their toes touching the surface behind their head. This is an advanced flexibility pose. Preserve their identity and clothing.' 
+            },
+            { 
+                name: 'Shoulder Stand', 
+                prompt: 'A shot of the subject in a shoulder stand pose, balancing on their shoulders with their legs extended straight up towards the ceiling. Their hands are supporting their lower back. Preserve their identity and clothing.' 
+            },
+            { 
+                name: 'Lying on Bed, Knees Up', 
+                prompt: 'An overhead camera shot of the subject lying on their back on a bed, framed from the waist up. Their knees are bent and pulled up towards their chest. Preserve their identity and clothing.' 
+            },
+            {
+                name: 'Lying on Stomach',
+                prompt: 'A shot of the subject lying on their stomach on a bed, propped up on their elbows, looking at the camera with an alluring expression.'
+            },
+             { 
+                name: 'Stomach Arch (Scorpion)', 
+                prompt: 'A shot of the subject lying on their stomach on a bed, performing a scorpion pose by arching their back deeply and bringing their feet towards their head. Preserve their identity and clothing.' 
+            },
+            { 
+                name: 'Lying on Side', 
+                prompt: 'A full-body shot of the subject lying on their side on a bed, propped up on one elbow, with their body forming a gentle curve. They are looking at the camera with a soft, alluring expression. Preserve their identity and clothing.' 
+            },
+            {
+                name: 'Arch Back on Knees',
+                prompt: 'Change the subject\'s pose to kneeling on a bed with a graceful, deep arch in their back. The pose should be artistic and sensual. Preserve their identity and the scene\'s style.'
+            },
+             { 
+                name: 'Kneeling Forward', 
+                prompt: 'A shot of the subject kneeling on a bed and leaning forward, supporting their upper body with their forearms on the mattress. They are looking back over their shoulder at the camera. Preserve their identity and the scene\'s style.' 
+            },
+            {
+                name: 'Seductive Gaze Over Shoulder',
+                prompt: 'Pose the subject looking back over their shoulder at the camera with a soft, seductive expression. The lighting should be moody and intimate.'
+            },
+            {
+                name: 'Pin-up Pose on Bed',
+                prompt: 'Change the pose to a classic, playful pin-up style pose on a bed, such as sitting with knees together and turned to the side, looking at the camera with a smile.'
+            },
+            { 
+                name: 'Seated Straddle', 
+                prompt: 'A frontal shot of the subject sitting on the floor or a bed in a wide-legged straddle split, leaning forward slightly. The pose should highlight flexibility. Preserve their identity and the scene\'s style.' 
+            },
+             { 
+                name: 'Bedside Allure', 
+                prompt: 'A shot of the subject sitting on the edge of a bed, leaning slightly forward with one hand resting on the mattress. Their legs are crossed, and they are looking at the camera with a soft, alluring expression. Preserve their identity and the scene\'s style.' 
+            },
         ]
     }
 ];

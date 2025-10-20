@@ -356,7 +356,7 @@ const App: React.FC = () => {
       const newImageUrl = await task(currentImageFile, ...args);
       updateHistory(newImageUrl);
     } catch (err) {
-      // FIX: Correctly handle unknown error from catch block by checking its type.
+      // FIX: The 'err' object in a catch block is of type 'unknown'. Safely handle the error by checking if it is an instance of Error before accessing the message property.
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
       setError(errorMessage);
     } finally {
@@ -376,7 +376,7 @@ const App: React.FC = () => {
       const newImageUrl = await task(currentImageUrl, ...args);
       updateHistory(newImageUrl);
     } catch (err) {
-      // FIX: Correctly handle unknown error from catch block by checking its type.
+      // FIX: The 'err' object in a catch block is of type 'unknown'. Safely handle the error by checking if it is an instance of Error before accessing the message property.
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
       setError(errorMessage);
     } finally {

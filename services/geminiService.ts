@@ -170,7 +170,7 @@ Output: Return ONLY the final edited image. Do not return text.`;
 
     console.log('Sending image and prompt to the model...');
     const response: GenerateContentResponse = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         contents: { parts: [originalImagePart, textPart] },
         config: {
           safetySettings,
@@ -213,7 +213,7 @@ Output: Return ONLY the final filtered image. Do not return text.`;
 
     console.log('Sending image and filter prompt to the model...');
     const response: GenerateContentResponse = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         contents: { parts: [originalImagePart, textPart] },
         config: {
           safetySettings,
@@ -256,7 +256,7 @@ Output: Return ONLY the final adjusted image. Do not return text.`;
 
     console.log('Sending image and adjustment prompt to the model...');
     const response: GenerateContentResponse = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         contents: { parts: [originalImagePart, textPart] },
         config: {
           safetySettings,
@@ -298,7 +298,7 @@ Output: Return ONLY the final edited image. Do not return text.`;
 
     console.log('Sending image and background prompt to the model...');
     const response: GenerateContentResponse = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         contents: { parts: [originalImagePart, textPart] },
         config: {
           safetySettings,
@@ -341,7 +341,7 @@ export const generateColorGradedImage = async (
     const textPart = { text: prompt };
 
     const response: GenerateContentResponse = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         contents: { parts: [
             { text: "Original Image:"},
             originalImagePart,
@@ -389,7 +389,7 @@ Output: Return ONLY the final edited image. Do not return text.`;
 
     console.log('Sending image and studio prompt to the model...');
     const response: GenerateContentResponse = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         contents: { parts: [originalImagePart, textPart] },
         config: {
           safetySettings,
@@ -435,7 +435,7 @@ Output: Return ONLY the final edited image. Do not return text.`;
     const textPart = { text: prompt };
 
     const response: GenerateContentResponse = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         contents: { parts: [originalImagePart, textPart] },
         config: {
           safetySettings,
@@ -476,7 +476,7 @@ Output: Return ONLY the final edited image. Do not return text.`;
     const textPart = { text: prompt };
 
     const response: GenerateContentResponse = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         contents: { parts: [originalImagePart, textPart] },
         config: {
           safetySettings,
@@ -519,7 +519,7 @@ Output: Return ONLY the final edited image. Do not return text.`;
     const textPart = { text: prompt };
 
     const response: GenerateContentResponse = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         contents: { parts: [originalImagePart, textPart] },
         config: {
           safetySettings,
@@ -561,7 +561,7 @@ export const generateFusedFaceImage = async (
     const textPart = { text: prompt };
 
     const response: GenerateContentResponse = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         contents: { parts: [
             { text: "Original Image:"},
             originalImagePart,
@@ -610,7 +610,7 @@ export const generateStyleTransferredImage = async (
     const textPart = { text: prompt };
 
     const response: GenerateContentResponse = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         contents: { parts: [
             { text: "Original Image:"},
             originalImagePart,
@@ -658,7 +658,7 @@ export const generateSwappedFaceImage = async (
     const textPart = { text: prompt };
 
     const response: GenerateContentResponse = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         contents: { parts: [
             { text: "Original Image:"},
             originalImagePart,
@@ -740,7 +740,7 @@ Output: You must return ONLY the final, composited image. Do not output any text
     parts.push({ text: prompt });
 
     const response: GenerateContentResponse = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         contents: { parts: parts },
         config: {
           safetySettings,
@@ -782,7 +782,7 @@ export const generateMakeupTransferredImage = async (
     const textPart = { text: prompt };
 
     const response: GenerateContentResponse = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         contents: { parts: [
             { text: "Original Image:"},
             originalImagePart,
@@ -825,7 +825,7 @@ export const generateMakeup = async (
     Output: Return ONLY the final edited image. Do not return text.` };
 
     const response: GenerateContentResponse = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         contents: { parts: [originalImagePart, textPart] },
         config: {
           safetySettings,
@@ -862,7 +862,7 @@ export const expandImage = async (
     Output: Return ONLY the final creative image. Do not return text.` };
 
     const response: GenerateContentResponse = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         contents: { parts: [originalImagePart, textPart] },
         config: {
           safetySettings,
@@ -902,7 +902,7 @@ CRITICAL RULES:
 Output: Return ONLY the final, filled image. Do not return text.` };
 
     const response: GenerateContentResponse = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         contents: { parts: [imagePart, textPart] },
         config: {
           safetySettings,
@@ -941,7 +941,7 @@ Output: Return ONLY the final styled image. Do not return text.`;
     const textPart = { text: prompt };
 
     const response: GenerateContentResponse = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         contents: { parts: [originalImagePart, textPart] },
         config: {
           safetySettings,
@@ -980,7 +980,7 @@ Output: Return ONLY the final image from the new angle. Do not return text.`;
     const textPart = { text: prompt };
 
     const response: GenerateContentResponse = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         contents: { parts: [originalImagePart, textPart] },
         config: {
           safetySettings,
@@ -1018,7 +1018,7 @@ Output: Return ONLY the final model image. Do not return text.`;
     const textPart = { text: prompt };
 
     const response: GenerateContentResponse = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         contents: { parts: [personImagePart, textPart] },
         config: {
           safetySettings,
@@ -1061,7 +1061,7 @@ Output: Return ONLY the final edited image. Do not return text.`;
     const textPart = { text: prompt };
 
     const response: GenerateContentResponse = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         contents: { parts: [
             { text: "Model Image:"},
             modelImagePart,
@@ -1107,7 +1107,7 @@ Output: Return ONLY the final image with the new pose. Do not return text.`;
     const textPart = { text: prompt };
 
     const response: GenerateContentResponse = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         contents: { parts: [personImagePart, textPart] },
         config: {
           safetySettings,
@@ -1146,7 +1146,7 @@ Output: Return ONLY the final, time-traveled image. Do not return text.`;
 
     console.log('Sending image and time travel prompt to the model...');
     const response: GenerateContentResponse = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         contents: { parts: [originalImagePart, textPart] },
         config: {
           safetySettings,
@@ -1203,7 +1203,7 @@ Output: Return ONLY the final edited image. Do not return text.`;
     const textPart = { text: mainPrompt };
 
     const response: GenerateContentResponse = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         contents: { parts: [
             { text: "Original Image:"},
             originalImagePart,
@@ -1309,7 +1309,7 @@ Output: You must return ONLY the final, photorealistic image. Do not output any 
     parts.push({ text: prompt });
 
     const response: GenerateContentResponse = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         contents: { parts: parts },
         config: {
           safetySettings,
@@ -1352,7 +1352,7 @@ CRITICAL INSTRUCTIONS:
 Output: Return ONLY the final edited image. Do not return text.` };
 
     const response: GenerateContentResponse = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         contents: { parts: [originalImagePart, textPart] },
         config: {
           safetySettings,
@@ -1413,7 +1413,7 @@ Output: Return ONLY the final, masterfully composited image. Do not return text.
     const textPart = { text: prompt };
 
     const response: GenerateContentResponse = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         contents: { parts: [
             { text: "Original Image:"},
             originalImagePart,
