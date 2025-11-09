@@ -9,32 +9,32 @@ const motownStyles = [
   {
     id: 'style1',
     name: 'Classic Studio',
-    prompt: 'Ultra-detailed studio portrait of the uploaded person as a 1960s Motown soul singer. Chest-up framing, centered in the image, wearing a sharp, elegant suit or formal outfit, holding a metal vintage microphone close to their mouth. Clean seamless studio backdrop, soft three-point studio lighting, gentle vignette, smooth skin but natural texture, subtle film grain, high contrast. Widescreen 16:9 cinematic composition, lots of negative space around the subject, no text, no logo, no watermark.'
+    prompt: 'Ultra-detailed studio portrait of the uploaded person as a 1960s Motown soul singer. Chest-up framing, centered in the image, wearing a sharp, elegant suit or formal outfit, holding a metal vintage microphone close to their mouth. Clean seamless studio backdrop wall of a random, vibrant, high-contrast solid color. The background must be completely flat, with no shadows or gradients. Soft three-point studio lighting on the subject, smooth skin but natural texture, subtle film grain, high contrast. Widescreen 16:9 cinematic composition, lots of negative space around the subject, no text, no logo, no watermark.'
   },
   {
     id: 'style2',
     name: 'Friendly Promo',
-    prompt: 'Cinematic studio promo portrait of the uploaded person styled as a 1960s Motown artist. Chest-up framing, friendly smile, relaxed shoulders, the person wearing a tailored suit or smart outfit, holding a retro microphone with both hands. Simple studio backdrop with a soft gradient, very soft flattering key light from the front and subtle rim light separating them from the background. Shallow depth of field, smooth bokeh, classic soul promo photo, 16:9 horizontal aspect ratio, centered composition, clean image with no text or graphics.'
+    prompt: 'Cinematic studio promo portrait of the uploaded person styled as a 1960s Motown artist. Chest-up framing, friendly smile, relaxed shoulders, the person wearing a tailored suit or smart outfit, holding a retro microphone with both hands. Simple studio backdrop wall of a random, vibrant, high-contrast solid color, with no shadows or gradients. Very soft flattering key light from the front and subtle rim light separating them from the background. Shallow depth of field, smooth bokeh, classic soul promo photo, 16:9 horizontal aspect ratio, centered composition, clean image with no text or graphics.'
   },
   {
     id: 'style3',
     name: 'Soul Diva Glam',
-    prompt: 'High-end studio portrait of the uploaded person transformed into a glamorous 1960s soul diva. Framed from chest up, slightly turned shoulders, confident yet relaxed facial expression, direct eye contact with the camera. The person wears an elegant stage dress with visible texture, bold earrings and layered necklaces, holding a vintage microphone at chest level. Background is a smooth studio backdrop with subtle spotlight glow behind the head. Beauty-style lighting, soft shadows, refined makeup detail, cinematic grading. Shot in ultra-sharp 4K, widescreen 16:9, no text, no logo, no watermark.'
+    prompt: 'High-end studio portrait of the uploaded person transformed into a glamorous 1960s soul diva. Framed from chest up, slightly turned shoulders, confident yet relaxed facial expression, direct eye contact with the camera. The person wears an elegant stage dress with visible texture, bold earrings and layered necklaces, holding a vintage microphone at chest level. Background is a smooth studio backdrop wall of a random, vibrant, high-contrast solid color, with no shadows or gradients. Beauty-style lighting, soft shadows, refined makeup detail, cinematic grading. Shot in ultra-sharp 4K, widescreen 16:9, no text, no logo, no watermark.'
   },
   {
     id: 'style4',
     name: 'Monochrome Vintage',
-    prompt: 'Timeless monochrome promo portrait of the uploaded person as a 1960s Motown singer. Chest-up composition, subject centered, wearing a classic stage outfit suitable for a soul artist, holding a retro microphone close to their mouth. Strong but soft studio lighting with clear highlights and deep shadows, subtle film grain, slightly faded analog film look. Background is a simple seamless studio backdrop with a gentle gradient. High contrast monochrome, very sharp details, YouTube thumbnail friendly, 16:9 horizontal frame, no text, no logo, no borders.'
+    prompt: 'Timeless monochrome promo portrait of the uploaded person as a 1960s Motown singer. Chest-up composition, subject centered, wearing a classic stage outfit suitable for a soul artist, holding a retro microphone close to their mouth. Strong but soft studio lighting with clear highlights and deep shadows on the subject. Subtle film grain, slightly faded analog film look. Background is a simple seamless studio backdrop wall of a flat, solid, high-contrast gray tone, with no shadows or gradients. High contrast monochrome, very sharp details, YouTube thumbnail friendly, 16:9 horizontal frame, no text, no logo, no borders.'
   },
   {
     id: 'style5',
     name: 'Live On Stage',
-    prompt: 'Cinematic live-performance scene featuring the uploaded person as a 1960s Motown soul singer on stage. 4K ultra-detailed portrait from the waist up, the person is singing passionately into a metal vintage microphone on a stand, wearing a stylish classic stage outfit with subtle shine. Strong spotlight from above and slightly to the side, dramatic shadows, faint smoke or haze in the background. Out-of-focus band lights and stage bokeh in the distance for depth. Shot in widescreen 16:9, subject centered, dynamic yet clean composition, no text, no logo, no watermark.'
+    prompt: 'Cinematic live-performance scene featuring the uploaded person as a 1960s Motown soul singer on stage. 4K ultra-detailed portrait from the waist up, the person is singing passionately into a metal vintage microphone on a stand, wearing a stylish classic stage outfit with subtle shine. Strong spotlight from above and slightly to the side on the subject, creating dramatic shadows on them. The background is a simple, flat stage wall of a random, vibrant, high-contrast solid color, with absolutely no shadows, gradients, or atmospheric effects like smoke or haze. Shot in widescreen 16:9, subject centered, dynamic yet clean composition, no text, no logo, no watermark.'
   },
   {
     id: 'style6',
     name: 'Thumbnail Layout',
-    prompt: 'Modern YouTube thumbnail-style portrait of the uploaded person reimagined as a 1960s Motown star. 16:9 horizontal composition, the person is placed on the left two-thirds of the frame, chest-up, holding a retro microphone, wearing a sharp, stylish outfit. Background is a clean studio backdrop with a smooth, minimal gradient and a very plain area on the right third of the frame reserved for later text (but no text generated in the image). Soft, even studio lighting, subtle vignette, minimalistic design, high clarity, no logo, no watermark.'
+    prompt: 'Modern YouTube thumbnail-style portrait of the uploaded person reimagined as a 1960s Motown star. 16:9 horizontal composition, the person is placed on the left two-thirds of the frame, chest-up, holding a retro microphone, wearing a sharp, stylish outfit. Background is a clean studio backdrop wall of a random, vibrant, high-contrast solid color with a very plain area on the right third of the frame reserved for later text (but no text generated in the image). The background must be completely flat with no shadows or gradients. Soft, even studio lighting on the subject, minimalistic design, high clarity, no logo, no watermark.'
   },
 ];
 

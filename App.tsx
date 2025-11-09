@@ -364,8 +364,10 @@ const App: React.FC = () => {
       const currentImageFile = dataURLtoFile(currentImageUrl, originalImageFile?.name || 'current-image.png');
       const newImageUrl = await task(currentImageFile, ...args);
       updateHistory(newImageUrl);
-    } catch (err) {
-      // FIX: The 'err' object in a catch block is of type 'unknown'. Safely handle the error by checking if it is an instance of Error before accessing the message property.
+    } 
+    // Fix: The 'err' object from a catch block is of type 'unknown' and cannot be directly passed to setError, which expects a string.
+    catch (err) {
+      // FIX: The 'err' object from a catch block is of type 'unknown'. This checks if it's an Error instance to safely access the message property, falling back to a generic message.
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
       setError(errorMessage);
     } finally {
@@ -384,8 +386,10 @@ const App: React.FC = () => {
     try {
       const newImageUrl = await task(currentImageUrl, ...args);
       updateHistory(newImageUrl);
-    } catch (err) {
-      // FIX: The 'err' object in a catch block is of type 'unknown'. Safely handle the error by checking if it is an instance of Error before accessing the message property.
+    } 
+    // Fix: The 'err' object from a catch block is of type 'unknown' and cannot be directly passed to setError, which expects a string.
+    catch (err) {
+      // FIX: The 'err' object from a catch block is of type 'unknown'. This checks if it's an Error instance to safely access the message property, falling back to a generic message.
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
       setError(errorMessage);
     } finally {
