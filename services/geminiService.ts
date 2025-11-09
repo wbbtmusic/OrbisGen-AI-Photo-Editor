@@ -1432,7 +1432,7 @@ Output: Return ONLY the final, masterfully composited image. Do not return text.
 
 
 /**
- * Generates AI-powered suggestions for a given tool context.
+ * Generates an AI-powered suggestions for a given tool context.
  * @param toolContext A string describing the tool, e.g., "Artistic Filters".
  * @returns A promise that resolves to an array of suggestion objects.
  */
@@ -1589,4 +1589,43 @@ export const compositePersonIntoScene = async (
     };
 
     return generateCompositedPersonImage(sceneImage, fullOptions);
+};
+
+/**
+ * Generates a Motown-styled image from an original image.
+ * @param originalImage The original image file.
+ * @param stylePrompt The prompt describing the Motown style.
+ * @returns A promise that resolves to the data URL of the new image.
+ */
+export const generateMotownImage = async (
+    originalImage: File,
+    stylePrompt: string,
+): Promise<string> => {
+    console.log(`Starting Motown generation with style: ${stylePrompt}`);
+    const ai = new GoogleGenAI({ apiKey: getApiKey() });
+    
+    const originalImagePart = await fileToPart(originalImage);
+    const prompt = `You are a world-class photographer and digital artist specializing in recreating historical and thematic styles. Your task is to transform the person in the provided image according to the detailed style brief below.
+
+**CRITICAL RULE: IDENTITY PRESERVATION IS PARAMOUNT.** The recognizable facial features, ethnicity, bone structure, and unique identity of the person in the uploaded image MUST be perfectly and absolutely preserved. The final image must look like the same individual, simply styled for the theme. Any alteration of their core identity is a complete failure.
+
+**Style Brief:**
+---
+${stylePrompt}
+---
+
+Output: Return ONLY the final, styled image. Do not return any text.`;
+
+    const textPart = { text: prompt };
+
+    const response: GenerateContentResponse = await ai.models.generateContent({
+        model: 'gemini-2.5-flash-image',
+        contents: { parts: [originalImagePart, textPart] },
+        config: {
+          safetySettings,
+          responseModalities: [Modality.IMAGE, Modality.TEXT],
+        },
+    });
+    
+    return handleApiResponse(response, 'Motown generation');
 };

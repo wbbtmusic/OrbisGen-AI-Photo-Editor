@@ -34,6 +34,7 @@ export type Tool =
   | 'cosplay'
   | 'alternateHistory'
   | 'shuffle'
+  | 'motownAI'
   | 'none';
 
 export interface HistoryEntry {
@@ -150,6 +151,16 @@ export interface CosplayState {
 }
 
 export type GeneratedCosplayImage = GeneratedImage;
+
+// New types for Motown AI feature
+export type MotownAIStatus = 'setup' | 'generating' | 'results-shown';
+
+export interface MotownAIState {
+  status: MotownAIStatus;
+  generationRequests?: { name: string, prompt: string }[];
+}
+
+export type GeneratedMotownImage = GeneratedImage;
 
 
 // Types for new Fashion AI / Virtual Try-On tool

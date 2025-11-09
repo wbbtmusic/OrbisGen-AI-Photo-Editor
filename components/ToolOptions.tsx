@@ -4,7 +4,7 @@
 */
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AddPersonOptions, CosplayOptions, GeneratedImage, AestheticState, Theme, Tool, Layer, CameraAnglesState, GeneratedAngleImage, OutfitLayer, WardrobeItem, TimeTravelerState, GeneratedTimeTravelerImage, CosplayState, GeneratedCosplayImage } from '../types';
+import { AddPersonOptions, CosplayOptions, GeneratedImage, AestheticState, Theme, Tool, Layer, CameraAnglesState, GeneratedAngleImage, OutfitLayer, WardrobeItem, TimeTravelerState, GeneratedTimeTravelerImage, CosplayState, GeneratedCosplayImage, MotownAIState, GeneratedMotownImage } from '../types';
 import { toolCategories, ToolDefinition } from './Toolbar';
 import { CloseIcon } from './icons';
 
@@ -36,6 +36,7 @@ import ProjectorPanel from './ProjectorPanel';
 import CosplayPanel from './CosplayPanel';
 import AlternateHistoryPanel from './AlternateHistoryPanel';
 import ShufflePanel from './ShufflePanel';
+import MotownPanel from './MotownPanel';
 
 
 export const toolDisplayName: Record<Tool, string> = {
@@ -67,6 +68,7 @@ export const toolDisplayName: Record<Tool, string> = {
   cosplay: 'Cosplay AI',
   alternateHistory: 'Alternate History',
   shuffle: 'Shuffle AI',
+  motownAI: 'Motown AI',
   none: 'No Tool',
 };
 
@@ -152,6 +154,10 @@ export interface ToolOptionsProps {
     generatedCosplayImages: Record<string, GeneratedCosplayImage>;
     cosplayOptions: CosplayOptions;
     onCosplayOptionsChange: React.Dispatch<React.SetStateAction<CosplayOptions>>;
+    onGenerateMotownImages: (requests: { name: string, prompt: string }[]) => void;
+    motownState: MotownAIState;
+    setMotownState: React.Dispatch<React.SetStateAction<MotownAIState>>;
+    generatedMotownImages: Record<string, GeneratedMotownImage>;
     onClose: () => void;
 }
 
@@ -244,6 +250,8 @@ const ToolOptions: React.FC<ToolOptionsProps> = (props) => {
             return <AlternateHistoryPanel onApply={props.onApplyAlternateHistory} isLoading={isLoading} hasSelection={hasSelection} />;
         case 'shuffle':
             return <ShufflePanel onApplyShuffle={props.onApplyShuffle} isLoading={isLoading} />;
+        case 'motownAI':
+            return <MotownPanel onGenerate={props.onGenerateMotownImages} isLoading={isLoading} />;
         default:
           return <div className="p-4 text-center text-sm text-zinc-400">Select a tool from the toolbar to see its options.</div>;
     }

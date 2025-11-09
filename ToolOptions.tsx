@@ -4,7 +4,7 @@
 */
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-// Fix: Changed PersonaState to AestheticState to match exported types.
+// FIX: Changed PersonaState to AestheticState to match exported types.
 import { AddPersonOptions, GeneratedImage, AestheticState, Theme, Tool, Layer, CameraAnglesState, GeneratedAngleImage, CosplayOptions } from '../types';
 import { toolCategories, ToolDefinition } from './Toolbar';
 import { CloseIcon } from './icons';
@@ -45,7 +45,7 @@ export const toolDisplayName: Record<Tool, string> = {
   textGen: 'Generative Text',
   sky: 'Replace Sky',
   insert: 'Insert Object',
-  // Fix: Replaced 'expand' with 'generativeExpand' and updated the display name to match the Tool type.
+  // FIX: Replaced 'expand' with 'generativeExpand' and updated the display name to match the Tool type.
   generativeExpand: 'Expand Canvas',
   colorGrade: 'Color Grade',
   faceFusion: 'Face Fusion',
@@ -56,20 +56,22 @@ export const toolDisplayName: Record<Tool, string> = {
   fashion: 'Fashion AI',
   makeup: 'Makeup AI',
   randomize: 'Randomize',
-  // Fix: Renamed 'personas' to 'aestheticAI' to match the Tool type.
+  // FIX: Renamed 'personas' to 'aestheticAI' to match the Tool type.
   aestheticAI: 'Aesthetic AI',
   cameraAngles: 'Camera Angles',
   layers: 'Layers',
   // FIX: Added missing 'timeTraveler' property to satisfy the `Record<Tool, string>` type.
   timeTraveler: 'Time Traveler',
-  // Fix: Add missing 'projector' property to satisfy the Record<Tool, string> type.
+  // FIX: Add missing 'projector' property to satisfy the Record<Tool, string> type.
   projector: 'Projector AI',
   // FIX: Added missing 'cosplay' property to satisfy the `Record<Tool, string>` type.
   cosplay: 'Cosplay AI',
-  // Fix: Add missing 'alternateHistory' property to satisfy the Record<Tool, string> type.
+  // FIX: Add missing 'alternateHistory' property to satisfy the Record<Tool, string> type.
   alternateHistory: 'Alternate History',
   // FIX: Add missing 'shuffle' property to satisfy the Record<Tool, string> type.
   shuffle: 'Shuffle AI',
+  // FIX: Added missing 'motownAI' property to satisfy the `Record<Tool, string>` type.
+  motownAI: 'Motown AI',
   none: 'No Tool',
 };
 
@@ -109,7 +111,7 @@ export interface ToolOptionsProps {
     onApplyMakeup: (prompt: string) => void;
     onApplyRandomize: () => void;
     originalImageFile: File | null;
-    // Fix: Updated prop names for consistency with the rest of the app.
+    // FIX: Updated prop names for consistency with the rest of the app.
     onGenerateAesthetics: (theme: Theme, categories:string[]) => void;
     onUseGeneratedImageInEditor: (imageUrl: string) => void;
     aestheticState: AestheticState;
@@ -190,7 +192,7 @@ const ToolOptions: React.FC<ToolOptionsProps> = (props) => {
               onFlatten={props.onFlattenLayers}
               isLoading={isLoading}
           />;
-        // Fix: Renamed case from 'personas' to 'aestheticAI' and updated props.
+        // FIX: Renamed case from 'personas' to 'aestheticAI' and updated props.
         case 'aestheticAI':
           return <AestheticPanel onGenerate={props.onGenerateAesthetics} />;
         case 'cameraAngles':

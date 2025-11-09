@@ -34,10 +34,11 @@ import {
   generateProjectedTexture,
   generateCosplayImage,
   generateAlternateHistoryImage,
-  generateShuffledImage
+  generateShuffledImage,
+  generateMotownImage
 } from './services/geminiService';
 import { saveRecentProject, rotateImage, flipImageHorizontal } from './lib/utils';
-import { type Tool, type HistoryEntry, type AddPersonOptions, type AestheticState, type GeneratedImage, type Theme, type Layer, type CameraAnglesState, type GeneratedAngleImage, type OutfitLayer, type WardrobeItem, type TimeTravelerState, GeneratedTimeTravelerImage, type CosplayOptions, type CosplayState, type GeneratedCosplayImage } from './types';
+import { type Tool, type HistoryEntry, type AddPersonOptions, type AestheticState, type GeneratedImage, type Theme, type Layer, type CameraAnglesState, type GeneratedAngleImage, type OutfitLayer, type WardrobeItem, type TimeTravelerState, GeneratedTimeTravelerImage, type CosplayOptions, type CosplayState, type GeneratedCosplayImage, type MotownAIState, type GeneratedMotownImage } from './types';
 import EditorCanvas, { type EditorCanvasRef } from './components/EditorCanvas';
 import Toolbar from './components/Toolbar';
 import Header from './components/Header';
@@ -140,6 +141,10 @@ const App: React.FC = () => {
   // Cosplay AI State
   const [cosplayState, setCosplayState] = useState<CosplayState>({ status: 'setup' });
   const [generatedCosplayImages, setGeneratedCosplayImages] = useState<Record<string, GeneratedCosplayImage>>({});
+
+  // Motown AI State
+  const [motownState, setMotownState] = useState<MotownAIState>({ status: 'setup' });
+  const [generatedMotownImages, setGeneratedMotownImages] = useState<Record<string, GeneratedMotownImage>>({});
 
 
   // Tool Options State
@@ -252,6 +257,8 @@ const App: React.FC = () => {
         setGeneratedTimeTravelerImages({});
         setCosplayState({ status: 'setup' });
         setGeneratedCosplayImages({});
+        setMotownState({ status: 'setup' });
+        setGeneratedMotownImages({});
         setAddPersonOptions(initialAddPersonOptions);
         setCosplayOptions(initialCosplayOptions);
         setFashionState({ modelImageUrl: null, outfitHistory: [], currentOutfitIndex: 0, currentPoseIndex: 0, wardrobe: defaultWardrobe, status: 'create_model' });
@@ -276,6 +283,8 @@ const App: React.FC = () => {
       setGeneratedTimeTravelerImages({});
       setCosplayState({ status: 'setup' });
       setGeneratedCosplayImages({});
+      setMotownState({ status: 'setup' });
+      setGeneratedMotownImages({});
       setAddPersonOptions(initialAddPersonOptions);
       setCosplayOptions(initialCosplayOptions);
       setFashionState({ modelImageUrl: null, outfitHistory: [], currentOutfitIndex: 0, currentPoseIndex: 0, wardrobe: defaultWardrobe, status: 'create_model' });
@@ -660,6 +669,37 @@ const App: React.FC = () => {
     setCosplayState(prev => ({ ...prev, status: 'results-shown' }));
   }, [originalImageFile, cosplayOptions]);
 
+  const handleGenerateMotownImages = useCallback(async (requests: { name: string, prompt: string }[]) => {
+    if (!originalImageFile) return;
+    
+    setIsToolPanelVisible(false);
+    setIsLoading(true);
+    setMotownState({ status: 'generating', generationRequests: requests });
+    setGeneratedMotownImages(
+      requests.reduce((acc, req) => ({ ...acc, [req.name]: { status: 'pending' } }), {})
+    );
+
+    await Promise.allSettled(requests.map(async (req) => {
+      try {
+        const newImageUrl = await generateMotownImage(originalImageFile, req.prompt);
+        setGeneratedMotownImages(prev => ({
+          ...prev,
+          [req.name]: { status: 'done', url: newImageUrl },
+        }));
+      } catch (err) {
+        console.error(`Error generating Motown image for "${req.name}":`, err);
+        const errorMessage = err instanceof Error ? err.message : 'Generation failed.';
+        setGeneratedMotownImages(prev => ({
+          ...prev,
+          [req.name]: { status: 'error', error: errorMessage },
+        }));
+      }
+    }));
+    
+    setIsLoading(false);
+    setMotownState(prev => ({ ...prev, status: 'results-shown' }));
+  }, [originalImageFile]);
+
 
   const handleUseGeneratedImageInEditor = (imageUrl: string) => {
       const newHistory = [{ imageUrl }];
@@ -678,6 +718,8 @@ const App: React.FC = () => {
       setGeneratedTimeTravelerImages({});
       setCosplayState({ status: 'setup' });
       setGeneratedCosplayImages({});
+      setMotownState({ status: 'setup' });
+      setGeneratedMotownImages({});
       
       setActiveTool('adjust');
       setIsToolPanelVisible(true);
@@ -925,7 +967,10 @@ const App: React.FC = () => {
   const isCosplayResultsVisible = activeTool === 'cosplay' &&
     (cosplayState.status === 'generating' || cosplayState.status === 'results-shown');
 
-  const isGenerationViewVisible = isAestheticResultsVisible || isCameraAnglesResultsVisible || isTimeTravelerResultsVisible || isCosplayResultsVisible;
+  const isMotownResultsVisible = activeTool === 'motownAI' &&
+    (motownState.status === 'generating' || motownState.status === 'results-shown');
+
+  const isGenerationViewVisible = isAestheticResultsVisible || isCameraAnglesResultsVisible || isTimeTravelerResultsVisible || isCosplayResultsVisible || isMotownResultsVisible;
   
   const canUndo = historyIndex > 0;
   const canRedo = historyIndex < history.length - 1;
@@ -972,6 +1017,10 @@ const App: React.FC = () => {
     generatedCosplayImages: generatedCosplayImages,
     cosplayOptions: cosplayOptions,
     onCosplayOptionsChange: setCosplayOptions,
+    onGenerateMotownImages: handleGenerateMotownImages,
+    motownState: motownState,
+    setMotownState: setMotownState,
+    generatedMotownImages: generatedMotownImages,
     loadingMessage: loadingMessage,
     error: error,
   };
@@ -1018,24 +1067,30 @@ const App: React.FC = () => {
                 title={
                   isAestheticResultsVisible ? 'Aesthetic AI' : 
                   isCameraAnglesResultsVisible ? 'Camera Angles' : 
-                  isTimeTravelerResultsVisible ? 'Time Traveler' : 'Cosplay AI'
+                  isTimeTravelerResultsVisible ? 'Time Traveler' :
+                  isCosplayResultsVisible ? 'Cosplay AI' : 'Motown AI'
                 }
                 subtitle={
                   isAestheticResultsVisible ? aestheticState.selectedTheme?.title : 
                   isCameraAnglesResultsVisible ? 'Generated from new perspectives' : 
                   isTimeTravelerResultsVisible ? 'Images from across the timeline' : 
-                  cosplayState.options?.characterName || 'Cosplay Generations'
+                  isCosplayResultsVisible ? cosplayState.options?.characterName || 'Cosplay Generations' :
+                  isMotownResultsVisible ? 'Classic soul styles' : null
                 }
                 generationCategories={
                   isAestheticResultsVisible ? aestheticState.generationCategories : 
                   isCameraAnglesResultsVisible ? cameraAnglesState.generationPrompts.map(p => p.name) : 
                   isTimeTravelerResultsVisible ? timeTravelerState.generationPrompts.map(p => p.name) :
-                  Object.keys(generatedCosplayImages)
+                  isCosplayResultsVisible ? Object.keys(generatedCosplayImages) :
+                  isMotownResultsVisible ? (motownState.generationRequests?.map(r => r.name) || []) :
+                  []
                 }
                 generatedImages={
                   isAestheticResultsVisible ? generatedImages :
                   isCameraAnglesResultsVisible ? generatedAngleImages : 
-                  isTimeTravelerResultsVisible ? generatedTimeTravelerImages : generatedCosplayImages
+                  isTimeTravelerResultsVisible ? generatedTimeTravelerImages :
+                  isCosplayResultsVisible ? generatedCosplayImages :
+                  isMotownResultsVisible ? generatedMotownImages : {}
                 }
                 onUseInEditor={handleUseGeneratedImageInEditor}
                 onBack={() => {
@@ -1051,6 +1106,9 @@ const App: React.FC = () => {
                   } else if (isCosplayResultsVisible) {
                     setCosplayState({ status: 'setup' });
                     setGeneratedCosplayImages({});
+                  } else if (isMotownResultsVisible) {
+                    setMotownState({ status: 'setup' });
+                    setGeneratedMotownImages({});
                   }
                   setIsToolPanelVisible(true);
                 }}

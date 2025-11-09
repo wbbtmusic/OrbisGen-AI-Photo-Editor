@@ -8,7 +8,7 @@ import { Tool } from '../types';
 import { 
     // New Category Icons
     TrendingCategoryIcon, EssentialsCategoryIcon, FramingViewCategoryIcon, RetouchInpaintingCategoryIcon, PortraitFaceCategoryIcon,
-    CharacterFashionCategoryIcon, ArtisticEffectsCategoryIcon, GenerativeWorldsCategoryIcon,
+    CharacterFashionCategoryIcon, ArtisticEffectsCategoryIcon, GenerativeWorldsCategoryIcon, MicrophoneIcon,
     // Tool Icons
     CropIcon, AdjustSlidersIcon, MagicWandIcon, LayersIcon, ReplaceBgIcon, 
     SkyIcon, InsertIcon, AddPersonIcon, TextGenIcon, CameraAnglesIcon, 
@@ -87,6 +87,13 @@ export const toolCategories: ToolCategory[] = [
       { name: 'cosplay', icon: CosplayIcon, label: 'Cosplay AI' },
       { name: 'fashion', icon: FashionIcon, label: 'Fashion AI' },
       { name: 'clothingTransfer', icon: StyleTransferIcon, label: 'Clothing Transfer' },
+    ],
+  },
+   {
+    name: 'Thematic Styles',
+    icon: MicrophoneIcon,
+    tools: [
+      { name: 'motownAI', icon: MicrophoneIcon, label: 'Motown AI' },
     ],
   },
   {
