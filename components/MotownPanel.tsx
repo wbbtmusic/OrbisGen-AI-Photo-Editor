@@ -44,10 +44,10 @@ interface MotownPanelProps {
 }
 
 const MotownPanel: React.FC<MotownPanelProps> = ({ onGenerate, isLoading }) => {
-  const [selections, setSelections] = useState<Record<string, { selected: boolean; count: number }>>(() => {
-    const initial: Record<string, { selected: boolean; count: number }> = {};
+  const [selections, setSelections] = useState<Record<string, { selected: boolean; count: number; extraPrompt: string }>>(() => {
+    const initial: Record<string, { selected: boolean; count: number; extraPrompt: string }> = {};
     motownStyles.forEach(style => {
-      initial[style.id] = { selected: false, count: 1 };
+      initial[style.id] = { selected: false, count: 1, extraPrompt: '' };
     });
     return initial;
   });
@@ -67,6 +67,13 @@ const MotownPanel: React.FC<MotownPanelProps> = ({ onGenerate, isLoading }) => {
       [id]: { ...prev[id], count },
     }));
   };
+  
+  const handleExtraPromptChange = (id: string, prompt: string) => {
+    setSelections(prev => ({
+      ...prev,
+      [id]: { ...prev[id], extraPrompt: prompt },
+    }));
+  };
 
   const handleGenerate = () => {
     const requests: { name: string; prompt: string }[] = [];
@@ -75,9 +82,13 @@ const MotownPanel: React.FC<MotownPanelProps> = ({ onGenerate, isLoading }) => {
       const selection = selections[style.id];
       if (selection.selected) {
         for (let i = 1; i <= selection.count; i++) {
+          const finalPrompt = selection.extraPrompt.trim()
+            ? `${style.prompt} Additional user instructions: ${selection.extraPrompt.trim()}`
+            : style.prompt;
+
           requests.push({
             name: `${style.name}${selection.count > 1 ? ` ${i}` : ''}`,
-            prompt: style.prompt,
+            prompt: finalPrompt,
           });
         }
       }
@@ -97,8 +108,7 @@ const MotownPanel: React.FC<MotownPanelProps> = ({ onGenerate, isLoading }) => {
     }
   };
 
-  // FIX: Explicitly type the accumulator and current value in the reduce function to prevent type inference issues with Object.values.
-  const totalImages = Object.values(selections).reduce((acc: number, curr: { selected: boolean; count: number }) => (acc + (curr.selected ? curr.count : 0)), 0) + (customPrompt.trim() ? customCount : 0);
+  const totalImages = Object.values(selections).reduce((acc: number, curr: { selected: boolean; count: number; extraPrompt: string }) => (acc + (curr.selected ? curr.count : 0)), 0) + (customPrompt.trim() ? customCount : 0);
   const canGenerate = !isLoading && totalImages > 0;
 
   return (
@@ -136,6 +146,17 @@ const MotownPanel: React.FC<MotownPanelProps> = ({ onGenerate, isLoading }) => {
                   value={selections[style.id].count}
                   onChange={(e) => handleCountChange(style.id, parseInt(e.target.value))}
                   className="w-full h-2 bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-yellow-400"
+                  disabled={isLoading}
+                />
+                 <label className="text-xs font-medium text-zinc-400 mt-2">
+                  Optional additions:
+                </label>
+                <textarea
+                  value={selections[style.id].extraPrompt}
+                  onChange={(e) => handleExtraPromptChange(style.id, e.target.value)}
+                  placeholder="e.g., 'wearing a red tie', 'with a subtle smile'"
+                  className="flex-grow bg-zinc-700 border border-zinc-600 text-zinc-100 rounded-lg p-2 text-xs focus:ring-1 focus:ring-yellow-400 focus:outline-none transition w-full disabled:cursor-not-allowed disabled:opacity-60"
+                  rows={2}
                   disabled={isLoading}
                 />
               </motion.div>

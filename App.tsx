@@ -365,9 +365,8 @@ const App: React.FC = () => {
       const newImageUrl = await task(currentImageFile, ...args);
       updateHistory(newImageUrl);
     } 
-    // Fix: The 'err' object from a catch block is of type 'unknown' and cannot be directly passed to setError, which expects a string.
     catch (err) {
-      // FIX: The 'err' object from a catch block is of type 'unknown'. This checks if it's an Error instance to safely access the message property, falling back to a generic message.
+      // FIX: Argument of type 'unknown' is not assignable to parameter of type 'string'. The 'err' object from a catch block is of type 'unknown' and must be type-checked before being used as a string.
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
       setError(errorMessage);
     } finally {
@@ -387,9 +386,8 @@ const App: React.FC = () => {
       const newImageUrl = await task(currentImageUrl, ...args);
       updateHistory(newImageUrl);
     } 
-    // Fix: The 'err' object from a catch block is of type 'unknown' and cannot be directly passed to setError, which expects a string.
     catch (err) {
-      // FIX: The 'err' object from a catch block is of type 'unknown'. This checks if it's an Error instance to safely access the message property, falling back to a generic message.
+      // FIX: Argument of type 'unknown' is not assignable to parameter of type 'string'. The 'err' object from a catch block is of type 'unknown' and must be type-checked before being used as a string.
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
       setError(errorMessage);
     } finally {
